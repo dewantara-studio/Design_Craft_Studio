@@ -1,0 +1,1497 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DesignCraft Studio - Belajar Desain Grafis</title>
+
+<!--
+  ====================================================================
+  CARA SETUP (WAJIB dibaca sebelum dipakai):
+  1. Buat project gratis di https://console.firebase.google.com
+  2. Aktifkan "Authentication" > sign-in method > Email/Password
+  3. Aktifkan "Firestore Database" (mode production, lokasi asia-southeast)
+  4. Buka Project Settings > General > scroll ke "Your apps" > tambah Web App
+  5. Salin object firebaseConfig yang muncul, tempel di FIREBASE_CONFIG di bawah
+  6. Ganti ADMIN_CODE di bawah dengan kode rahasia pilihan Anda
+  7. Di Firestore > Rules, tempel aturan berikut lalu Publish:
+
+     rules_version = '2';
+     service cloud.firestore {
+       match /databases/{database}/documents {
+         match /users/{userId} {
+           allow read: if request.auth != null;
+           allow write: if request.auth != null && request.auth.uid == userId;
+         }
+       }
+     }
+  ====================================================================
+-->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'sans-serif'],
+          heading: ['Space Grotesk', 'sans-serif'],
+        },
+        colors: {
+          ink: '#15171C',
+          paper: '#F5F4F1',
+          signal: { 50:'#FFF3EE', 100:'#FFE1D3', 300:'#FFAE8C', 500:'#FF4B1F', 600:'#E23E14', 700:'#B8320F' },
+          tealc: { 50:'#ECFAF9', 100:'#CFF1EF', 300:'#7FD6D1', 500:'#0EA5A8', 600:'#0B8688', 700:'#0A6E70' }
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-track{background:#eeece7}
+  ::-webkit-scrollbar-thumb{background:#c9c6bd;border-radius:4px}
+  ::-webkit-scrollbar-thumb:hover{background:#a9a69c}
+
+  .canvas-grid-bg{background-size:20px 20px;background-image:linear-gradient(to right,#f1f5f9 1px,transparent 1px),linear-gradient(to bottom,#f1f5f9 1px,transparent 1px)}
+
+  /* Crop-mark corner motif — nod to print registration marks, used sparingly */
+  .crop-frame{position:relative}
+  .crop-frame::before,.crop-frame::after,.crop-frame .cm-tr,.cm-bl{content:'';position:absolute;width:16px;height:16px;pointer-events:none}
+  .crop-frame::before{top:-1px;left:-1px;border-top:2px solid var(--cm-color,#FF4B1F);border-left:2px solid var(--cm-color,#FF4B1F)}
+  .crop-frame::after{bottom:-1px;right:-1px;border-bottom:2px solid var(--cm-color,#FF4B1F);border-right:2px solid var(--cm-color,#FF4B1F)}
+  .crop-frame .cm-tr{top:-1px;right:-1px;border-top:2px solid var(--cm-color,#FF4B1F);border-right:2px solid var(--cm-color,#FF4B1F)}
+  .crop-frame .cm-bl{bottom:-1px;left:-1px;border-bottom:2px solid var(--cm-color,#FF4B1F);border-left:2px solid var(--cm-color,#FF4B1F)}
+
+  .rail-link.active{background:#15171C;color:#fff}
+  .rail-link.active i{color:#FF4B1F}
+  .swatch-dot{width:12px;height:12px;border-radius:50%;display:inline-block}
+  .bar-track{height:8px;border-radius:4px;background:#e7e5e0;overflow:hidden}
+  .bar-fill{height:100%;border-radius:4px}
+  .quiz-opt{cursor:pointer;transition:all .15s}
+  .quiz-opt.correct{background:#ECFDF5;border-color:#10b981;color:#065f46}
+  .quiz-opt.wrong{background:#FFF1F2;border-color:#f43f5e;color:#9f1239}
+  #colorWheelCanvas{cursor:pointer}
+  .fade-in{animation:fadeIn .25s ease-out}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body class="bg-paper text-ink font-sans min-h-screen antialiased selection:bg-signal-100">
+
+<!-- ============================================================ -->
+<!-- SCREEN 0: LOADING -->
+<!-- ============================================================ -->
+<div id="screen-loading" class="min-h-screen flex flex-col items-center justify-center gap-3">
+  <div class="w-10 h-10 border-4 border-ink/10 border-t-signal-500 rounded-full animate-spin"></div>
+  <p class="text-xs text-ink/50 font-medium">Memuat DesignCraft Studio...</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 1: SETUP WARNING (shown if firebase config not filled) -->
+<!-- ============================================================ -->
+<div id="screen-setup-warning" class="hidden min-h-screen flex items-center justify-center p-6">
+  <div class="max-w-lg bg-white border border-signal-300 rounded-2xl p-8 space-y-4 crop-frame" style="--cm-color:#FF4B1F"><span class="cm-tr"></span><span class="cm-bl"></span>
+    <div class="w-12 h-12 rounded-xl bg-signal-50 text-signal-600 flex items-center justify-center text-xl"><i class="fa-solid fa-plug-circle-exclamation"></i></div>
+    <h1 class="font-heading font-bold text-xl">Konfigurasi Firebase Belum Diisi</h1>
+    <p class="text-sm text-ink/70 leading-relaxed">Supaya login &amp; hasil kerja tiap siswa bisa tersimpan online (karena dipakai dari HP/laptop masing-masing), aplikasi ini butuh project Firebase gratis.</p>
+    <ol class="text-xs text-ink/70 space-y-1.5 list-decimal list-inside leading-relaxed">
+      <li>Buka <span class="font-mono bg-ink/5 px-1 rounded">console.firebase.google.com</span>, buat project baru (gratis).</li>
+      <li>Aktifkan <strong>Authentication → Email/Password</strong>.</li>
+      <li>Aktifkan <strong>Firestore Database</strong>.</li>
+      <li>Salin <span class="font-mono bg-ink/5 px-1 rounded">firebaseConfig</span> ke bagian atas kode file ini (cari <span class="font-mono bg-ink/5 px-1 rounded">FIREBASE_CONFIG</span>).</li>
+    </ol>
+    <p class="text-[11px] text-ink/40">Petunjuk lengkap ada di komentar paling atas kode HTML ini.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 2: AUTH (Login / Register) -->
+<!-- ============================================================ -->
+<div id="screen-auth" class="hidden min-h-screen grid grid-cols-1 lg:grid-cols-2">
+  <!-- Left: Brand panel -->
+  <div class="hidden lg:flex flex-col justify-between bg-ink text-white p-12 relative overflow-hidden">
+    <div class="flex items-center gap-3">
+      <div class="w-11 h-11 rounded-xl bg-signal-500 flex items-center justify-center"><i class="fa-solid fa-palette text-lg"></i></div>
+      <span class="font-heading font-bold text-xl">Design<span class="text-signal-500">Craft</span> Studio</span>
+    </div>
+    <div class="space-y-6 max-w-md">
+      <h1 class="font-heading font-bold text-4xl leading-tight">Ruang belajar &amp; berkarya desain grafis untuk tiap siswa.</h1>
+      <p class="text-white/60 text-sm leading-relaxed">Setiap akun punya ruang kerja sendiri — modul belajar, studio kanvas, kuis, dan galeri karya tersimpan rapi per siswa. Guru dapat memantau perkembangan pemahaman setiap akun dari dashboard admin.</p>
+      <div class="flex items-center gap-2 pt-2">
+        <span class="swatch-dot bg-signal-500"></span><span class="swatch-dot bg-tealc-500"></span><span class="swatch-dot bg-amber-400"></span><span class="swatch-dot bg-purple-500"></span><span class="swatch-dot bg-emerald-500"></span>
+      </div>
+    </div>
+    <p class="text-white/30 text-[11px]">SLB Negeri Tompokersan Lumajang</p>
+    <div class="absolute -right-16 -bottom-16 opacity-[0.06] pointer-events-none"><i class="fa-solid fa-swatchbook text-[320px]"></i></div>
+  </div>
+
+  <!-- Right: Form panel -->
+  <div class="flex items-center justify-center p-6 sm:p-12">
+    <div class="w-full max-w-sm space-y-6">
+      <div class="lg:hidden flex items-center gap-2.5 justify-center mb-2">
+        <div class="w-9 h-9 rounded-lg bg-signal-500 text-white flex items-center justify-center"><i class="fa-solid fa-palette"></i></div>
+        <span class="font-heading font-bold text-lg">Design<span class="text-signal-500">Craft</span></span>
+      </div>
+
+      <div class="crop-frame bg-white border border-ink/10 rounded-2xl p-6 sm:p-7 space-y-5" style="--cm-color:#FF4B1F"><span class="cm-tr"></span><span class="cm-bl"></span>
+
+        <div class="flex bg-ink/5 rounded-xl p-1 text-sm font-semibold">
+          <button id="auth-tab-login" onclick="setAuthMode('login')" class="flex-1 py-2 rounded-lg transition-all">Masuk</button>
+          <button id="auth-tab-register" onclick="setAuthMode('register')" class="flex-1 py-2 rounded-lg transition-all">Daftar</button>
+        </div>
+
+        <div id="auth-error" class="hidden text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2"></div>
+
+        <!-- LOGIN FORM -->
+        <form id="form-login" onsubmit="handleLogin(event)" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-ink/60 mb-1">Username</label>
+            <input required id="login-username" type="text" autocomplete="username" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="cth. rid_desain">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-ink/60 mb-1">Password</label>
+            <input required id="login-password" type="password" autocomplete="current-password" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="••••••••">
+          </div>
+          <button type="submit" id="login-submit-btn" class="w-full bg-ink hover:bg-ink/90 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors mt-2">Masuk ke Studio</button>
+        </form>
+
+        <!-- REGISTER FORM -->
+        <form id="form-register" onsubmit="handleRegister(event)" class="space-y-3 hidden">
+          <div>
+            <label class="block text-xs font-semibold text-ink/60 mb-1">Nama Lengkap</label>
+            <input required id="reg-name" type="text" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="Nama kamu">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-ink/60 mb-1">Username</label>
+            <input required id="reg-username" type="text" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 karakter, huruf/angka/underscore" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="tanpa spasi">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-ink/60 mb-1">Password</label>
+            <input required id="reg-password" type="password" minlength="6" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="Minimal 6 karakter">
+          </div>
+
+          <label class="flex items-center gap-2 text-xs font-medium text-ink/60 pt-1 cursor-pointer">
+            <input type="checkbox" id="reg-is-admin" onchange="document.getElementById('reg-admin-code-wrap').classList.toggle('hidden', !this.checked)" class="rounded border-ink/30">
+            Daftar sebagai Guru / Admin
+          </label>
+          <div id="reg-admin-code-wrap" class="hidden">
+            <label class="block text-xs font-semibold text-ink/60 mb-1">Kode Admin</label>
+            <input id="reg-admin-code" type="password" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="Diberikan oleh sekolah">
+          </div>
+
+          <button type="submit" id="register-submit-btn" class="w-full bg-signal-500 hover:bg-signal-600 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors mt-2">Buat Akun</button>
+        </form>
+      </div>
+      <p class="text-center text-[11px] text-ink/35">Data tersimpan aman per akun di cloud (Firebase).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 3: STUDENT APP -->
+<!-- ============================================================ -->
+<div id="screen-app" class="hidden min-h-screen lg:flex">
+
+  <!-- Left rail nav (desktop) -->
+  <aside class="hidden lg:flex lg:flex-col w-60 shrink-0 bg-ink text-white p-4 justify-between sticky top-0 h-screen">
+    <div class="space-y-6">
+      <div class="flex items-center gap-2.5 px-2">
+        <div class="w-9 h-9 rounded-lg bg-signal-500 flex items-center justify-center"><i class="fa-solid fa-palette"></i></div>
+        <span class="font-heading font-bold text-base">Design<span class="text-signal-500">Craft</span></span>
+      </div>
+      <nav class="space-y-1">
+        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-house w-4"></i> Beranda</button>
+        <button onclick="switchTab('modules')" id="nav-modules" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-book-open w-4"></i> Modul Belajar</button>
+        <button onclick="switchTab('studio')" id="nav-studio" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-pen-ruler w-4"></i> Studio Desain</button>
+        <button onclick="switchTab('challenges')" id="nav-challenges" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-trophy w-4"></i> Tantangan</button>
+        <button onclick="switchTab('gallery')" id="nav-gallery" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-images w-4"></i> Galeri Karya</button>
+      </nav>
+    </div>
+    <div class="space-y-3">
+      <div class="bg-white/5 rounded-xl p-3 space-y-2">
+        <div class="flex items-center gap-2 text-xs font-semibold"><i class="fa-solid fa-star text-amber-400"></i><span id="user-xp">0 XP</span></div>
+        <div class="flex items-center gap-2 text-xs font-semibold"><i class="fa-solid fa-award text-purple-400"></i><span id="completed-count">0/4 Modul</span></div>
+      </div>
+      <div class="flex items-center gap-2 px-1">
+        <div class="w-8 h-8 rounded-full bg-signal-500/20 text-signal-400 flex items-center justify-center text-xs font-bold" id="user-avatar">?</div>
+        <div class="flex-1 min-w-0">
+          <p id="user-name-label" class="text-xs font-semibold truncate">-</p>
+          <button onclick="handleLogout()" class="text-[11px] text-white/40 hover:text-white/70">Keluar</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile top bar -->
+  <header class="lg:hidden bg-ink text-white sticky top-0 z-40 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-signal-500 flex items-center justify-center text-sm"><i class="fa-solid fa-palette"></i></div>
+      <span class="font-heading font-bold text-sm">Design<span class="text-signal-500">Craft</span></span>
+    </div>
+    <div class="flex items-center gap-2 text-xs font-semibold">
+      <span class="bg-white/10 px-2.5 py-1 rounded-full" id="user-xp-mobile">0 XP</span>
+      <button onclick="handleLogout()" class="text-white/50"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="flex-1 w-full max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8">
+
+    <!-- TAB: DASHBOARD -->
+    <section id="tab-dashboard" class="tab-content space-y-6">
+      <div class="crop-frame relative overflow-hidden rounded-3xl bg-ink text-white p-6 sm:p-10" style="--cm-color:#FF4B1F"><span class="cm-tr"></span><span class="cm-bl"></span>
+        <div class="relative z-10 max-w-2xl space-y-4">
+          <span class="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-xs font-medium" id="hero-greeting">Selamat Datang!</span>
+          <h1 class="text-3xl sm:text-4xl font-heading font-bold leading-tight">Kuasai dasar desain grafis lewat praktik langsung.</h1>
+          <p class="text-white/60 text-sm sm:text-base leading-relaxed">Pelajari elemen visual, eksperimen warna, atur tipografi, lalu ciptakan karyamu sendiri di studio kanvas interaktif.</p>
+          <div class="pt-2 flex flex-wrap gap-3">
+            <button onclick="switchTab('modules')" class="bg-signal-500 hover:bg-signal-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2"><i class="fa-solid fa-play"></i> Mulai Belajar</button>
+            <button onclick="switchTab('studio')" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-5 py-2.5 rounded-xl text-sm border border-white/15 transition-all">Buka Studio Desain</button>
+          </div>
+        </div>
+        <div class="absolute -right-10 -bottom-10 opacity-[0.08] pointer-events-none"><i class="fa-solid fa-icons text-[220px]"></i></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div onclick="openModule(1)" class="bg-white p-5 rounded-2xl border border-ink/10 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-shapes text-xl"></i></div>
+          <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Modul 1</span>
+          <h3 class="font-bold text-ink text-base mt-2">Elemen &amp; Hirarki</h3>
+          <p class="text-xs text-ink/50 mt-1">Garis, bentuk, kontras &amp; keseimbangan visual.</p>
+          <div class="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between text-xs text-ink/40"><span id="dash-mod-1-status">Belum dimulai</span><i class="fa-solid fa-arrow-right"></i></div>
+        </div>
+        <div onclick="openModule(2)" class="bg-white p-5 rounded-2xl border border-ink/10 hover:border-purple-400 hover:shadow-md transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-palette text-xl"></i></div>
+          <span class="text-xs font-semibold text-purple-600 bg-purple-50 px-2 py-0.5 rounded">Modul 2</span>
+          <h3 class="font-bold text-ink text-base mt-2">Teori Warna</h3>
+          <p class="text-xs text-ink/50 mt-1">Roda warna, harmoni warna &amp; emosi visual.</p>
+          <div class="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between text-xs text-ink/40"><span id="dash-mod-2-status">Belum dimulai</span><i class="fa-solid fa-arrow-right"></i></div>
+        </div>
+        <div onclick="openModule(3)" class="bg-white p-5 rounded-2xl border border-ink/10 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-font text-xl"></i></div>
+          <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Modul 3</span>
+          <h3 class="font-bold text-ink text-base mt-2">Seni Tipografi</h3>
+          <p class="text-xs text-ink/50 mt-1">Serif vs Sans, font pairing, leading &amp; kerning.</p>
+          <div class="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between text-xs text-ink/40"><span id="dash-mod-3-status">Belum dimulai</span><i class="fa-solid fa-arrow-right"></i></div>
+        </div>
+        <div onclick="openModule(4)" class="bg-white p-5 rounded-2xl border border-ink/10 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-grip text-xl"></i></div>
+          <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Modul 4</span>
+          <h3 class="font-bold text-ink text-base mt-2">Komposisi &amp; Grid</h3>
+          <p class="text-xs text-ink/50 mt-1">Rule of Thirds, alignment &amp; ruang kosong.</p>
+          <div class="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between text-xs text-ink/40"><span id="dash-mod-4-status">Belum dimulai</span><i class="fa-solid fa-arrow-right"></i></div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="bg-tealc-50 border border-tealc-100 rounded-2xl p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-2 text-tealc-700 font-bold mb-2"><i class="fa-solid fa-lightbulb"></i><span>Tips Hari Ini</span></div>
+            <h4 class="font-semibold text-ink mb-2">Aturan Warna "60-30-10"</h4>
+            <p class="text-xs text-ink/60 leading-relaxed">Gunakan 60% warna dominan (background), 30% warna sekunder (teks/struktur), dan 10% warna aksen (tombol) agar hasil desainmu harmonis.</p>
+          </div>
+          <button onclick="openModule(2)" class="mt-4 pt-4 border-t border-tealc-100 text-tealc-700 font-bold text-xs text-left">Coba Roda Warna &rarr;</button>
+        </div>
+        <div class="lg:col-span-2 bg-white border border-ink/10 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div class="space-y-2">
+            <span class="text-xs font-bold text-signal-600 uppercase tracking-wide">Praktik Langsung</span>
+            <h3 class="text-xl font-heading font-bold text-ink">Siap membuat karya pertamamu?</h3>
+            <p class="text-xs sm:text-sm text-ink/50 max-w-md">Buat Poster, Logo, atau desain bebas di Studio Kanvas dengan alat drag-and-drop sederhana.</p>
+          </div>
+          <button onclick="switchTab('studio')" class="shrink-0 w-full sm:w-auto bg-ink hover:bg-ink/90 text-white font-medium px-6 py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"><i class="fa-solid fa-pen-nib text-signal-400"></i> Buka Canvas Editor</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: MODULES -->
+    <section id="tab-modules" class="tab-content hidden space-y-6">
+      <div class="bg-white p-2 rounded-2xl border border-ink/10 flex flex-wrap gap-2">
+        <button onclick="openModule(1)" id="mod-tab-1" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-shapes mr-1.5"></i> 1. Elemen</button>
+        <button onclick="openModule(2)" id="mod-tab-2" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-palette mr-1.5"></i> 2. Warna</button>
+        <button onclick="openModule(3)" id="mod-tab-3" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-font mr-1.5"></i> 3. Tipografi</button>
+        <button onclick="openModule(4)" id="mod-tab-4" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-grip mr-1.5"></i> 4. Grid</button>
+      </div>
+
+      <!-- MODULE 1 -->
+      <div id="module-content-1" class="module-body space-y-6">
+        <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">1</span> Elemen Dasar &amp; Hirarki Visual</h2>
+          <p class="text-sm text-ink/60 leading-relaxed">Desain grafis adalah seni menyampaikan pesan secara visual. Untuk membuat desain efektif, kita harus memahami elemen dasar dan bagaimana menyusun hirarki (urutan penting elemen).</p>
+
+          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
+            <div class="flex justify-between items-center flex-wrap gap-2">
+              <h3 class="font-heading font-bold text-signal-400 flex items-center gap-2 text-base"><i class="fa-solid fa-sliders"></i> Simulator: Kontras &amp; Hirarki</h3>
+              <span class="text-xs bg-white/10 text-white/60 px-3 py-1 rounded-full">Geser opsi di bawah</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div id="hierarchy-preview" class="bg-white/5 rounded-xl p-6 border border-white/10 flex flex-col justify-center items-center text-center space-y-3 min-h-[220px]">
+                <span id="demo-badge" class="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded">Pameran Karya</span>
+                <h2 id="demo-title" class="font-bold text-2xl transition-all">LOMBA DESAIN CREATIVE 2026</h2>
+                <p id="demo-subtitle" class="text-sm text-white/60 max-w-xs transition-all">Tunjukkan kreativitas visualmu dan menangkan hadiah menarik!</p>
+                <button id="demo-btn" class="bg-signal-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all">Daftar Sekarang</button>
+              </div>
+              <div class="space-y-4 text-xs">
+                <div>
+                  <label class="block text-white/50 font-semibold mb-1">Mode Hirarki Visual:</label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button onclick="setHierarchyMode('bad')" class="p-2.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-left"><div class="font-bold text-red-400"><i class="fa-solid fa-xmark mr-1"></i> Buruk</div><div class="text-[11px] text-white/40 mt-0.5">Semua elemen sama besar, mata bingung.</div></button>
+                    <button onclick="setHierarchyMode('good')" class="p-2.5 rounded-lg border border-signal-500 bg-signal-500/10 text-left"><div class="font-bold text-emerald-400"><i class="fa-solid fa-check mr-1"></i> Bagus</div><div class="text-[11px] text-white/40 mt-0.5">Judul menonjol, CTA jelas.</div></button>
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-white/50 font-semibold mb-1">Kontras Background:</label>
+                  <div class="flex gap-2 flex-wrap">
+                    <button onclick="setHierarchyBg('dark')" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-white">Gelap</button>
+                    <button onclick="setHierarchyBg('light')" class="px-3 py-1.5 bg-slate-100 hover:bg-white rounded border border-slate-300 text-slate-900">Terang</button>
+                    <button onclick="setHierarchyBg('low')" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded border border-white/10 text-white/40">Kontras Rendah</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-eye text-blue-600 text-xl mb-2"></i><h4 class="font-bold text-ink text-sm">Focal Point</h4><p class="text-xs text-ink/50 mt-1">Elemen pertama yang dilihat mata saat menatap desain.</p></div>
+            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-circle-half-stroke text-purple-600 text-xl mb-2"></i><h4 class="font-bold text-ink text-sm">Kontras Visual</h4><p class="text-xs text-ink/50 mt-1">Perbedaan ukuran/warna untuk memisahkan info penting.</p></div>
+            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-scale-balanced text-emerald-600 text-xl mb-2"></i><h4 class="font-bold text-ink text-sm">Keseimbangan</h4><p class="text-xs text-ink/50 mt-1">Simetris (seimbang) atau asimetris (dinamis).</p></div>
+          </div>
+
+          <div id="quiz-wrap-1" class="pt-2 border-t border-ink/10"></div>
+        </div>
+      </div>
+
+      <!-- MODULE 2 -->
+      <div id="module-content-2" class="module-body hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">2</span> Teori Warna &amp; Roda Warna Interaktif</h2>
+          <p class="text-sm text-ink/60 leading-relaxed">Warna membangkitkan emosi dan mengarahkan perhatian. Kombinasi warna yang tepat memakai formula harmoni seperti <strong>Komplementer</strong>, <strong>Analogis</strong>, dan <strong>Triadik</strong>.</p>
+
+          <div class="bg-ink rounded-2xl p-6 text-white grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div class="lg:col-span-5 flex flex-col items-center justify-center">
+              <canvas id="colorWheelCanvas" width="240" height="240" class="rounded-full shadow-lg border-2 border-white/10"></canvas>
+              <span class="text-[11px] text-white/40 mt-2">Klik pada roda warna untuk memilih warna utama!</span>
+            </div>
+            <div class="lg:col-span-7 space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-white/50 mb-2">Skema Harmoni Warna:</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <button onclick="setColorHarmony('complementary')" id="harm-complementary" class="harm-btn p-2 rounded-lg border border-signal-500 bg-signal-500/10 text-white font-medium">Komplementer</button>
+                  <button onclick="setColorHarmony('analogous')" id="harm-analogous" class="harm-btn p-2 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Analogis</button>
+                  <button onclick="setColorHarmony('triadic')" id="harm-triadic" class="harm-btn p-2 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Triadik</button>
+                  <button onclick="setColorHarmony('monochromatic')" id="harm-monochromatic" class="harm-btn p-2 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Monokromatik</button>
+                </div>
+              </div>
+              <div>
+                <span class="text-xs text-white/50 block mb-2 font-medium">Palette Hasil Harmoni:</span>
+                <div id="palette-swatches" class="flex h-16 rounded-xl overflow-hidden shadow-md border border-white/10"></div>
+              </div>
+              <div id="color-card-preview" class="p-4 rounded-xl border border-white/10 transition-all flex justify-between items-center">
+                <div><h4 id="preview-card-title" class="font-bold text-sm">Simulasi Kartu UI</h4><p id="preview-card-sub" class="text-xs opacity-70">Lihat bagaimana warna utama &amp; aksen berpadu.</p></div>
+                <button id="preview-card-btn" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">Aksi</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <h3 class="font-bold text-ink text-base mb-3">Psikologi Warna dalam Brand:</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div class="p-3 bg-red-50 border border-red-200 rounded-xl"><div class="font-bold text-red-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500"></span>Merah</div><p class="text-ink/60">Energi, Keberanian, Semangat.</p></div>
+              <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl"><div class="font-bold text-blue-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500"></span>Biru</div><p class="text-ink/60">Kepercayaan, Profesional.</p></div>
+              <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl"><div class="font-bold text-emerald-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500"></span>Hijau</div><p class="text-ink/60">Kesehatan, Alam, Tumbuh.</p></div>
+              <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl"><div class="font-bold text-amber-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500"></span>Kuning</div><p class="text-ink/60">Keceriaan, Optimisme.</p></div>
+            </div>
+          </div>
+
+          <div id="quiz-wrap-2" class="pt-2 border-t border-ink/10"></div>
+        </div>
+      </div>
+
+      <!-- MODULE 3 -->
+      <div id="module-content-3" class="module-body hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">3</span> Seni Tipografi</h2>
+          <p class="text-sm text-ink/60 leading-relaxed">Tipografi bukan hanya memilih jenis huruf, tapi mengatur jarak antar karakter (Kerning/Tracking), jarak antar baris (Leading), dan kesesuaian font dengan pesan.</p>
+
+          <div class="bg-ink rounded-2xl p-6 text-white space-y-6">
+            <div class="flex justify-between items-center flex-wrap gap-2">
+              <h3 class="font-heading font-bold text-emerald-400 flex items-center gap-2 text-base"><i class="fa-solid fa-sliders"></i> Lab Tipografi Interaktif</h3>
+              <span class="text-xs bg-white/10 text-white/60 px-3 py-1 rounded-full">Eksperimen parameter huruf</span>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              <div class="lg:col-span-5 space-y-4 text-xs">
+                <div>
+                  <label class="block text-white/50 font-semibold mb-1">Gaya Font:</label>
+                  <select id="typo-font-family" onchange="updateTypoLab()" class="w-full bg-white/5 border border-white/10 text-white rounded-lg p-2.5 outline-none focus:border-emerald-500">
+                    <option value="font-sans">Sans-Serif (Inter)</option>
+                    <option value="font-heading">Display / Geometrik (Space Grotesk)</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="flex justify-between text-white/50 font-semibold mb-1"><span>Jarak Baris (Leading):</span><span id="typo-leading-val">1.4</span></div>
+                  <input type="range" id="typo-leading-slider" min="0.8" max="2.5" step="0.1" value="1.4" oninput="updateTypoLab()" class="w-full accent-emerald-500">
+                </div>
+                <div>
+                  <div class="flex justify-between text-white/50 font-semibold mb-1"><span>Jarak Huruf (Tracking):</span><span id="typo-tracking-val">0px</span></div>
+                  <input type="range" id="typo-tracking-slider" min="-2" max="10" step="1" value="0" oninput="updateTypoLab()" class="w-full accent-emerald-500">
+                </div>
+              </div>
+              <div class="lg:col-span-7 bg-white/5 rounded-xl p-6 border border-white/10 space-y-3 min-h-[220px]">
+                <span class="text-[10px] uppercase font-bold text-emerald-400 tracking-widest block border-b border-white/10 pb-1">Pratinjau Paragraf</span>
+                <h3 id="typo-demo-title" class="text-xl font-bold text-white">Keindahan Desain Terletak pada Detail Tipografi</h3>
+                <p id="typo-demo-body" class="text-sm text-white/60 transition-all">Desain yang bagus dapat dibaca dengan mudah tanpa membuat mata lelah. Mengatur spasi baris dan jarak huruf yang pas meningkatkan keterbacaan secara drastis!</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="quiz-wrap-3" class="pt-2 border-t border-ink/10"></div>
+        </div>
+      </div>
+
+      <!-- MODULE 4 -->
+      <div id="module-content-4" class="module-body hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm">4</span> Tata Letak, Grid &amp; Rule of Thirds</h2>
+          <p class="text-sm text-ink/60 leading-relaxed">Rule of Thirds membimbing mata pemirsa menuju titik fokus alami. Garis grid menjaga elemen tetap rapi dan terstruktur.</p>
+
+          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
+            <div class="flex justify-between items-center">
+              <h3 class="font-heading font-bold text-signal-400 flex items-center gap-2 text-base"><i class="fa-solid fa-border-all"></i> Rule of Thirds &amp; Overlay Grid</h3>
+              <button onclick="toggleDemoGrid()" class="text-xs bg-signal-500/10 text-signal-300 hover:bg-signal-500/20 px-3 py-1.5 rounded-lg border border-signal-500/30">Toggle Garis Grid</button>
+            </div>
+            <div class="relative bg-white/5 rounded-xl p-8 border border-white/10 min-h-[260px] flex items-center justify-center overflow-hidden">
+              <div id="demo-grid-overlay" class="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-40 transition-opacity">
+                <div class="border-r border-b border-signal-400/50"></div><div class="border-r border-b border-signal-400/50"></div><div class="border-b border-signal-400/50"></div>
+                <div class="border-r border-b border-signal-400/50"></div><div class="border-r border-b border-signal-400/50"></div><div class="border-b border-signal-400/50"></div>
+                <div class="border-r border-signal-400/50"></div><div class="border-r border-signal-400/50"></div><div></div>
+              </div>
+              <div class="relative z-10 w-full max-w-md bg-white/10 border border-white/10 rounded-xl p-4 shadow-xl flex items-center space-x-4">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-signal-400 to-rose-500 flex items-center justify-center text-white font-bold text-xl shrink-0"><i class="fa-solid fa-camera"></i></div>
+                <div><h4 class="font-bold text-sm text-white">Elemen Fokus Utama</h4><p class="text-xs text-white/50">Diletakkan tepat di perpotongan garis sepertiga untuk daya tarik maksimal.</p></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="quiz-wrap-4" class="pt-2 border-t border-ink/10"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: STUDIO -->
+    <section id="tab-studio" class="tab-content hidden space-y-4">
+      <div class="bg-white p-3 rounded-2xl border border-ink/10 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center space-x-2">
+          <span class="font-heading font-bold text-ink text-base flex items-center gap-2"><i class="fa-solid fa-pen-ruler text-signal-600"></i> Studio Canvas</span>
+          <span class="text-ink/20">|</span>
+          <select id="canvas-preset" onchange="changeCanvasPreset()" class="bg-paper border border-ink/10 text-xs rounded-lg px-2.5 py-1.5 font-medium outline-none focus:border-signal-500">
+            <option value="square">Post Instagram (1:1)</option>
+            <option value="poster">Poster Event (3:4)</option>
+            <option value="banner">Banner Landscape (16:9)</option>
+          </select>
+        </div>
+        <div class="flex items-center space-x-2 flex-wrap">
+          <button onclick="toggleCanvasGrid()" class="px-3 py-1.5 bg-paper hover:bg-ink/10 text-ink/70 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"><i class="fa-solid fa-border-all"></i> <span class="hidden sm:inline">Grid</span></button>
+          <button onclick="clearCanvas()" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"><i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">Bersihkan</span></button>
+          <button onclick="promptSaveWork()" class="px-4 py-1.5 bg-signal-500 hover:bg-signal-600 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"><i class="fa-solid fa-floppy-disk"></i> Simpan Karya</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        <div class="lg:col-span-3 bg-white border border-ink/10 rounded-2xl p-4 space-y-4">
+          <h3 class="font-bold text-xs uppercase tracking-wider text-ink/40">Tambah Elemen</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="addTextToCanvas()" class="p-3 bg-paper hover:bg-blue-50 hover:border-blue-300 border border-ink/10 rounded-xl text-left transition-all group"><i class="fa-solid fa-font text-blue-600 text-lg mb-1 group-hover:scale-110 transition-transform"></i><div class="text-xs font-bold text-ink">Teks</div><div class="text-[10px] text-ink/40">Judul/Subtitle</div></button>
+            <button onclick="addShapeToCanvas('rect')" class="p-3 bg-paper hover:bg-purple-50 hover:border-purple-300 border border-ink/10 rounded-xl text-left transition-all group"><i class="fa-solid fa-square text-purple-600 text-lg mb-1 group-hover:scale-110 transition-transform"></i><div class="text-xs font-bold text-ink">Persegi</div><div class="text-[10px] text-ink/40">Kotak/Kartu</div></button>
+            <button onclick="addShapeToCanvas('circle')" class="p-3 bg-paper hover:bg-emerald-50 hover:border-emerald-300 border border-ink/10 rounded-xl text-left transition-all group"><i class="fa-solid fa-circle text-emerald-600 text-lg mb-1 group-hover:scale-110 transition-transform"></i><div class="text-xs font-bold text-ink">Lingkaran</div><div class="text-[10px] text-ink/40">Bentuk Bulat</div></button>
+            <button onclick="addShapeToCanvas('badge')" class="p-3 bg-paper hover:bg-amber-50 hover:border-amber-300 border border-ink/10 rounded-xl text-left transition-all group"><i class="fa-solid fa-certificate text-amber-500 text-lg mb-1 group-hover:scale-110 transition-transform"></i><div class="text-xs font-bold text-ink">Lencana</div><div class="text-[10px] text-ink/40">Sticker Aksen</div></button>
+          </div>
+          <div class="pt-2 border-t border-ink/10">
+            <label class="block text-xs font-bold text-ink/70 mb-2">Template Cepat:</label>
+            <div class="space-y-1.5">
+              <button onclick="loadTemplate('poster')" class="w-full text-left px-3 py-2 bg-paper hover:bg-ink/10 rounded-lg text-xs font-medium text-ink/70 flex items-center justify-between"><span><i class="fa-solid fa-bullhorn text-blue-500 mr-2"></i>Poster Acara</span><i class="fa-solid fa-chevron-right text-[10px] text-ink/30"></i></button>
+              <button onclick="loadTemplate('logo')" class="w-full text-left px-3 py-2 bg-paper hover:bg-ink/10 rounded-lg text-xs font-medium text-ink/70 flex items-center justify-between"><span><i class="fa-solid fa-gem text-purple-500 mr-2"></i>Logo Minimalis</span><i class="fa-solid fa-chevron-right text-[10px] text-ink/30"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-6 bg-ink/[0.03] rounded-2xl border border-ink/10 p-4 flex items-center justify-center min-h-[420px] overflow-auto relative">
+          <div id="studio-canvas-container" class="relative bg-white shadow-2xl rounded-xl overflow-hidden transition-all canvas-grid-bg" style="width:380px;height:380px;">
+            <div id="studio-grid-guide" class="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-30 border border-blue-400 hidden">
+              <div class="border-r border-b border-blue-400"></div><div class="border-r border-b border-blue-400"></div><div class="border-b border-blue-400"></div>
+              <div class="border-r border-b border-blue-400"></div><div class="border-r border-b border-blue-400"></div><div class="border-b border-blue-400"></div>
+              <div class="border-r border-blue-400"></div><div class="border-r border-blue-400"></div><div></div>
+            </div>
+            <div id="canvas-layers" class="relative w-full h-full"></div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-3 bg-white border border-ink/10 rounded-2xl p-4 space-y-4">
+          <h3 class="font-bold text-xs uppercase tracking-wider text-ink/40">Properti Elemen</h3>
+          <div id="no-selection-msg" class="text-center py-8 text-xs text-ink/40"><i class="fa-solid fa-hand-pointer text-2xl mb-2 text-ink/20 block"></i>Klik elemen di canvas untuk mengubah warna, ukuran, atau teks.</div>
+          <div id="inspector-controls" class="space-y-4 hidden text-xs">
+            <div id="prop-text-group"><label class="block font-semibold text-ink/70 mb-1">Isi Teks:</label><input type="text" id="prop-text-val" oninput="updateSelectedElement('text', this.value)" class="w-full bg-paper border border-ink/10 rounded-lg p-2 font-medium outline-none focus:border-signal-500"></div>
+            <div><label class="block font-semibold text-ink/70 mb-1">Warna Isi:</label><div class="flex items-center gap-2"><input type="color" id="prop-color-val" onchange="updateSelectedElement('color', this.value)" class="w-8 h-8 rounded border border-ink/10 cursor-pointer"><span id="prop-color-hex" class="text-ink/50 font-mono">#3b82f6</span></div></div>
+            <div><div class="flex justify-between font-semibold text-ink/70 mb-1"><span>Ukuran:</span><span id="prop-size-lbl">20px</span></div><input type="range" id="prop-size-val" min="12" max="72" oninput="updateSelectedElement('size', this.value)" class="w-full accent-signal-500"></div>
+            <div><label class="block font-semibold text-ink/70 mb-1">Urutan Layer:</label><div class="grid grid-cols-2 gap-2"><button onclick="moveLayer('front')" class="p-2 bg-paper hover:bg-ink/10 rounded-lg font-medium text-ink/70"><i class="fa-solid fa-arrow-up mr-1"></i> Depan</button><button onclick="moveLayer('back')" class="p-2 bg-paper hover:bg-ink/10 rounded-lg font-medium text-ink/70"><i class="fa-solid fa-arrow-down mr-1"></i> Belakang</button></div></div>
+            <div class="pt-2 border-t border-ink/10"><button onclick="deleteSelectedElement()" class="w-full p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-trash"></i> Hapus Elemen Ini</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: CHALLENGES -->
+    <section id="tab-challenges" class="tab-content hidden space-y-6">
+      <div class="bg-ink rounded-3xl p-6 text-white flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div>
+          <span class="text-xs bg-white/10 px-3 py-1 rounded-full font-semibold">Uji Pengetahuan</span>
+          <h2 class="text-2xl font-heading font-bold mt-1">Tantangan Kejelian Desainer</h2>
+          <p class="text-white/50 text-xs sm:text-sm">Uji kejelianmu mengenali kesalahan desain dan dapatkan XP.</p>
+        </div>
+        <div class="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 text-center shrink-0">
+          <span class="text-2xl font-bold block" id="challenge-score-display">0/1</span>
+          <span class="text-[10px] uppercase font-bold text-white/40">Tantangan Selesai</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h3 class="font-heading font-bold text-ink text-lg flex items-center gap-2"><i class="fa-solid fa-magnifying-glass text-signal-500"></i> Mini-Game: Kejelian Mata Desainer</h3>
+          <span class="text-xs text-signal-700 font-semibold bg-signal-50 px-2.5 py-1 rounded-full">+50 XP</span>
+        </div>
+        <p class="text-xs text-ink/60">Dua opsi desain poster event di bawah ini. Manakah yang punya <strong>hirarki visual &amp; keterbacaan (kontras)</strong> yang tepat?</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          <div onclick="checkChallengeAnswer('A')" class="border-2 border-ink/10 hover:border-signal-400 rounded-2xl p-6 bg-ink text-white/40 cursor-pointer transition-all space-y-3 text-center relative group">
+            <span class="absolute top-3 left-3 bg-white/10 text-white/60 text-xs px-2.5 py-1 rounded-lg font-bold">Opsi A</span>
+            <div class="pt-4"><h4 class="text-white/50 text-base font-normal uppercase">LOMBA DESAIN GRAFIS PEMULA 2026</h4><p class="text-xs text-white/40 mt-2">Daftar sekarang, dapatkan hadiah menarik!</p><button class="mt-4 bg-white/10 text-white/40 text-xs px-3 py-1 rounded">Klik Sini</button></div>
+          </div>
+          <div onclick="checkChallengeAnswer('B')" class="border-2 border-ink/10 hover:border-signal-400 rounded-2xl p-6 bg-ink text-white cursor-pointer transition-all space-y-3 text-center relative group">
+            <span class="absolute top-3 left-3 bg-signal-500 text-white text-xs px-2.5 py-1 rounded-lg font-bold">Opsi B</span>
+            <div class="pt-4"><span class="text-[10px] font-bold text-signal-400 uppercase tracking-widest bg-signal-400/10 px-2.5 py-1 rounded">Event Resmi</span><h4 class="text-2xl font-bold text-white mt-2">LOMBA DESAIN GRAFIS</h4><p class="text-xs text-white/60 mt-2 max-w-xs mx-auto">Tunjukkan bakat visualmu, menangkan hadiah menarik!</p><button class="mt-4 bg-signal-500 group-hover:bg-signal-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-transform group-hover:scale-105">Daftar Sekarang &rarr;</button></div>
+          </div>
+        </div>
+        <div id="challenge-feedback" class="hidden p-4 rounded-xl text-xs font-medium border"></div>
+      </div>
+    </section>
+
+    <!-- TAB: GALLERY -->
+    <section id="tab-gallery" class="tab-content hidden space-y-6">
+      <div class="flex justify-between items-center flex-wrap gap-4">
+        <div><h2 class="text-2xl font-heading font-bold text-ink">Galeri Karya</h2><p class="text-xs text-ink/50">Karya yang tersimpan hanya terlihat di akunmu sendiri.</p></div>
+        <button onclick="switchTab('studio')" class="bg-signal-500 hover:bg-signal-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">+ Buat Desain Baru</button>
+      </div>
+      <div class="bg-white border border-ink/10 rounded-2xl p-6 space-y-4">
+        <h3 class="font-bold text-sm text-ink uppercase tracking-wider">Karya Tersimpan</h3>
+        <div id="saved-gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="text-center py-12 text-ink/30 col-span-full border-2 border-dashed border-ink/10 rounded-xl"><i class="fa-solid fa-images text-3xl mb-2 block"></i><p class="text-xs">Belum ada karya. Buka <strong>Studio Desain</strong> dan simpan karya pertamamu!</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile bottom bar -->
+  <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-ink/10 flex justify-around py-2 z-40">
+    <button onclick="switchTab('dashboard')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-house text-base"></i>Beranda</button>
+    <button onclick="switchTab('modules')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-book-open text-base"></i>Modul</button>
+    <button onclick="switchTab('studio')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-pen-ruler text-base"></i>Studio</button>
+    <button onclick="switchTab('challenges')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-trophy text-base"></i>Tantangan</button>
+    <button onclick="switchTab('gallery')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-images text-base"></i>Galeri</button>
+  </nav>
+</div>
+
+<!-- ============================================================ -->
+<!-- SCREEN 4: ADMIN DASHBOARD -->
+<!-- ============================================================ -->
+<div id="screen-admin" class="hidden min-h-screen bg-paper">
+  <header class="bg-ink text-white px-4 sm:px-8 py-4 flex items-center justify-between sticky top-0 z-40">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-lg bg-signal-500 flex items-center justify-center"><i class="fa-solid fa-chart-line"></i></div>
+      <div><span class="font-heading font-bold text-base block leading-none">DesignCraft <span class="text-signal-500">Admin</span></span><span class="text-[11px] text-white/40" id="admin-name-label">-</span></div>
+    </div>
+    <button onclick="handleLogout()" class="text-xs font-semibold text-white/60 hover:text-white flex items-center gap-1.5"><i class="fa-solid fa-arrow-right-from-bracket"></i> Keluar</button>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 sm:p-8 space-y-6">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white border border-ink/10 rounded-2xl p-5"><span class="text-xs text-ink/40 font-semibold">Total Siswa</span><p class="text-2xl font-heading font-bold text-ink mt-1" id="stat-total-students">0</p></div>
+      <div class="bg-white border border-ink/10 rounded-2xl p-5"><span class="text-xs text-ink/40 font-semibold">Rata-rata XP</span><p class="text-2xl font-heading font-bold text-ink mt-1" id="stat-avg-xp">0</p></div>
+      <div class="bg-white border border-ink/10 rounded-2xl p-5"><span class="text-xs text-ink/40 font-semibold">Rata-rata Pemahaman</span><p class="text-2xl font-heading font-bold text-tealc-600 mt-1" id="stat-avg-understanding">0%</p></div>
+      <div class="bg-white border border-ink/10 rounded-2xl p-5"><span class="text-xs text-ink/40 font-semibold">Total Karya Tersimpan</span><p class="text-2xl font-heading font-bold text-signal-600 mt-1" id="stat-total-works">0</p></div>
+    </div>
+
+    <div class="bg-white border border-ink/10 rounded-2xl overflow-hidden">
+      <div class="p-4 sm:p-5 border-b border-ink/10 flex items-center justify-between flex-wrap gap-2">
+        <h3 class="font-heading font-bold text-ink">Daftar Siswa</h3>
+        <input id="admin-search" oninput="renderStudentsTable()" type="text" placeholder="Cari nama/username..." class="text-xs border border-ink/10 rounded-lg px-3 py-2 outline-none focus:border-signal-500 w-48">
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs sm:text-sm">
+          <thead><tr class="text-left text-ink/40 border-b border-ink/10">
+            <th class="p-3 font-semibold">Nama</th><th class="p-3 font-semibold">Username</th><th class="p-3 font-semibold">XP</th><th class="p-3 font-semibold">Modul Selesai</th><th class="p-3 font-semibold">Pemahaman</th><th class="p-3 font-semibold">Karya</th><th class="p-3 font-semibold"></th>
+          </tr></thead>
+          <tbody id="admin-students-tbody"></tbody>
+        </table>
+      </div>
+      <div id="admin-empty-state" class="hidden p-10 text-center text-ink/30 text-sm">Belum ada siswa yang mendaftar.</div>
+    </div>
+  </main>
+
+  <!-- Detail drawer -->
+  <div id="admin-detail-overlay" class="hidden fixed inset-0 bg-ink/50 z-50 flex justify-end">
+    <div class="w-full max-w-lg bg-paper h-full overflow-y-auto p-5 sm:p-6 space-y-5 fade-in">
+      <div class="flex items-center justify-between">
+        <h3 class="font-heading font-bold text-lg text-ink">Detail Siswa</h3>
+        <button onclick="closeStudentDetail()" class="w-8 h-8 rounded-full bg-white border border-ink/10 flex items-center justify-center text-ink/50"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="admin-detail-content" class="space-y-5"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= FIREBASE CONFIG — GANTI DENGAN MILIK ANDA ================= */
+const FIREBASE_CONFIG = {
+  apiKey: "ISI_API_KEY_ANDA",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  storageBucket: "ISI_PROJECT_ID.appspot.com",
+  messagingSenderId: "ISI_SENDER_ID",
+  appId: "ISI_APP_ID"
+};
+const ADMIN_CODE = "TOMPOKERSAN2026"; // Ganti dengan kode rahasia Anda sendiri
+const EMAIL_DOMAIN = "designcraft.local";
+/* =============================================================================== */
+
+let auth, db;
+let currentUser = null; // { uid, name, username, role }
+let currentUserData = null; // xp, completedModules, quizAnswers, challengeAnswers, gallery
+let allStudentsCache = [];
+let saveTimer = null;
+
+const QUIZ_BANK = {
+  1: [
+    { q: "Elemen yang pertama kali dilihat mata pemirsa disebut?", opts: ["Kontras", "Focal Point", "Kerning", "Palet"], correct: 1 },
+    { q: "Apa fungsi utama kontras dalam desain?", opts: ["Membuat desain lebih ramai", "Menyembunyikan elemen", "Memisahkan & menonjolkan elemen penting", "Mengganti warna latar"], correct: 2 },
+    { q: "Keseimbangan di mana elemen kiri & kanan sama disebut?", opts: ["Asimetris", "Simetris", "Radial", "Acak"], correct: 1 }
+  ],
+  2: [
+    { q: "Warna yang berseberangan di roda warna disebut harmoni?", opts: ["Analogis", "Triadik", "Komplementer", "Monokromatik"], correct: 2 },
+    { q: "Warna biru dalam psikologi brand sering diasosiasikan dengan?", opts: ["Energi & keberanian", "Kepercayaan & profesional", "Kesehatan & alam", "Keceriaan"], correct: 1 },
+    { q: "Skema warna dengan satu warna + variasi gelap-terang disebut?", opts: ["Triadik", "Analogis", "Komplementer", "Monokromatik"], correct: 3 }
+  ],
+  3: [
+    { q: "Jarak antar baris teks disebut?", opts: ["Kerning", "Leading", "Tracking", "Alignment"], correct: 1 },
+    { q: "Font berkait di ujung huruf (seperti Times New Roman) disebut?", opts: ["Sans-serif", "Serif", "Monospace", "Display"], correct: 1 },
+    { q: "Mengapa keterbacaan (legibility) itu penting?", opts: ["Agar terlihat ramai", "Agar mata tidak lelah membaca", "Agar warna menonjol", "Tidak penting"], correct: 1 }
+  ],
+  4: [
+    { q: "Aturan membagi bidang jadi 3x3 untuk titik fokus disebut?", opts: ["Rule of Thirds", "Golden Ratio", "Kerning Grid", "Framing"], correct: 0 },
+    { q: "Ruang kosong di sekitar elemen desain disebut?", opts: ["Padding Visual", "Negative Space", "Margin Aktif", "Blank Zone"], correct: 1 },
+    { q: "Alignment (perataan) elemen penting untuk menciptakan?", opts: ["Efek acak", "Kerapian & keteraturan visual", "Warna kontras", "Ukuran besar"], correct: 1 }
+  ]
+};
+const MODULE_NAMES = { 1: "Elemen & Hirarki", 2: "Teori Warna", 3: "Tipografi", 4: "Layout & Grid" };
+
+function defaultUserData(){
+  return { xp: 0, completedModules: [], quizAnswers: [], challengeAnswers: [], gallery: [] };
+}
+
+/* ---------------- INIT ---------------- */
+window.addEventListener('load', () => {
+  if (!FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey === "ISI_API_KEY_ANDA") {
+    show('screen-setup-warning');
+    return;
+  }
+  firebase.initializeApp(FIREBASE_CONFIG);
+  auth = firebase.auth();
+  db = firebase.firestore();
+
+  auth.onAuthStateChanged(async (fbUser) => {
+    if (fbUser) {
+      await loadCurrentUser(fbUser.uid);
+    } else {
+      currentUser = null;
+      currentUserData = null;
+      setAuthMode('login');
+      show('screen-auth');
+    }
+  });
+});
+
+function show(id){
+  ['screen-loading','screen-setup-warning','screen-auth','screen-app','screen-admin'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+/* ---------------- AUTH ---------------- */
+function setAuthMode(mode){
+  const isLogin = mode === 'login';
+  document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+  document.getElementById('form-register').classList.toggle('hidden', isLogin);
+  document.getElementById('auth-tab-login').classList.toggle('bg-white', isLogin);
+  document.getElementById('auth-tab-login').classList.toggle('shadow-sm', isLogin);
+  document.getElementById('auth-tab-register').classList.toggle('bg-white', !isLogin);
+  document.getElementById('auth-tab-register').classList.toggle('shadow-sm', !isLogin);
+  hideAuthError();
+}
+
+function showAuthError(msg){
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function hideAuthError(){
+  document.getElementById('auth-error').classList.add('hidden');
+}
+
+function usernameToEmail(username){
+  return username.trim().toLowerCase().replace(/[^a-z0-9_]/g,'') + '@' + EMAIL_DOMAIN;
+}
+
+async function handleLogin(e){
+  e.preventDefault();
+  hideAuthError();
+  const username = document.getElementById('login-username').value;
+  const password = document.getElementById('login-password').value;
+  const btn = document.getElementById('login-submit-btn');
+  btn.disabled = true; btn.innerText = 'Memproses...';
+  try {
+    await auth.signInWithEmailAndPassword(usernameToEmail(username), password);
+  } catch (err) {
+    showAuthError(friendlyAuthError(err));
+  } finally {
+    btn.disabled = false; btn.innerText = 'Masuk ke Studio';
+  }
+}
+
+async function handleRegister(e){
+  e.preventDefault();
+  hideAuthError();
+  const name = document.getElementById('reg-name').value.trim();
+  const username = document.getElementById('reg-username').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const isAdmin = document.getElementById('reg-is-admin').checked;
+  const adminCode = document.getElementById('reg-admin-code').value;
+
+  if (isAdmin && adminCode !== ADMIN_CODE) {
+    showAuthError('Kode admin salah.');
+    return;
+  }
+
+  const btn = document.getElementById('register-submit-btn');
+  btn.disabled = true; btn.innerText = 'Memproses...';
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(usernameToEmail(username), password);
+    const uid = cred.user.uid;
+    const profile = {
+      name, username, role: isAdmin ? 'admin' : 'siswa',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      ...defaultUserData()
+    };
+    await db.collection('users').doc(uid).set(profile);
+  } catch (err) {
+    showAuthError(friendlyAuthError(err));
+  } finally {
+    btn.disabled = false; btn.innerText = 'Buat Akun';
+  }
+}
+
+function friendlyAuthError(err){
+  const code = err && err.code;
+  if (code === 'auth/email-already-in-use') return 'Username sudah dipakai, coba username lain.';
+  if (code === 'auth/wrong-password' || code === 'auth/user-not-found' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials') return 'Username atau password salah.';
+  if (code === 'auth/weak-password') return 'Password minimal 6 karakter.';
+  if (code === 'auth/invalid-email') return 'Format username tidak valid (gunakan huruf/angka saja).';
+  return 'Terjadi kesalahan. Coba lagi.';
+}
+
+function handleLogout(){
+  auth.signOut();
+}
+
+/* ---------------- LOAD USER & ROUTE ---------------- */
+async function loadCurrentUser(uid){
+  const snap = await db.collection('users').doc(uid).get();
+  if (!snap.exists) { auth.signOut(); return; }
+  const data = snap.data();
+  currentUser = { uid, name: data.name, username: data.username, role: data.role };
+  currentUserData = Object.assign(defaultUserData(), {
+    xp: data.xp || 0,
+    completedModules: data.completedModules || [],
+    quizAnswers: data.quizAnswers || [],
+    challengeAnswers: data.challengeAnswers || [],
+    gallery: data.gallery || []
+  });
+
+  if (currentUser.role === 'admin') {
+    document.getElementById('admin-name-label').innerText = currentUser.name + ' · Guru/Admin';
+    show('screen-admin');
+    loadAllStudents();
+  } else {
+    document.getElementById('user-name-label').innerText = currentUser.name;
+    document.getElementById('user-avatar').innerText = currentUser.name.charAt(0).toUpperCase();
+    document.getElementById('hero-greeting').innerText = 'Selamat Datang, ' + currentUser.name.split(' ')[0] + '!';
+    show('screen-app');
+    initStudentApp();
+  }
+}
+
+function saveUserData(){
+  if (!currentUser) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    db.collection('users').doc(currentUser.uid).set({
+      xp: currentUserData.xp,
+      completedModules: currentUserData.completedModules,
+      quizAnswers: currentUserData.quizAnswers,
+      challengeAnswers: currentUserData.challengeAnswers,
+      gallery: currentUserData.gallery,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(err => console.error('Gagal menyimpan:', err));
+  }, 400);
+}
+
+/* ---------------- STUDENT APP ---------------- */
+let canvasElements = [];
+let selectedElementId = null;
+let elementIdCounter = 1;
+let selectedColorHue = 210;
+let currentHarmony = 'complementary';
+
+function initStudentApp(){
+  refreshHeaderStats();
+  renderAllQuizzes();
+  renderGallery();
+  updateDashboardModuleStatus();
+  setupColorWheelEvents();
+  renderCanvas();
+  loadTemplate('poster');
+  switchTab('dashboard');
+}
+
+function refreshHeaderStats(){
+  document.getElementById('user-xp').innerText = currentUserData.xp + ' XP';
+  document.getElementById('user-xp-mobile').innerText = currentUserData.xp + ' XP';
+  document.getElementById('completed-count').innerText = currentUserData.completedModules.length + '/4 Modul';
+}
+
+function switchTab(tabName){
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  const target = document.getElementById('tab-' + tabName);
+  if (target) target.classList.remove('hidden');
+
+  document.querySelectorAll('.rail-link').forEach(btn => btn.classList.remove('active'));
+  const activeNav = document.getElementById('nav-' + tabName);
+  if (activeNav) activeNav.classList.add('active');
+
+  if (tabName === 'modules') setTimeout(drawColorWheel, 100);
+}
+
+function openModule(moduleNum){
+  switchTab('modules');
+  document.querySelectorAll('.module-body').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.mod-tab-btn').forEach(btn => { btn.classList.remove('text-signal-600','bg-signal-50'); btn.classList.add('text-ink/60'); });
+
+  const activeBody = document.getElementById('module-content-' + moduleNum);
+  if (activeBody) activeBody.classList.remove('hidden');
+  const activeTabBtn = document.getElementById('mod-tab-' + moduleNum);
+  if (activeTabBtn) { activeTabBtn.classList.add('text-signal-600','bg-signal-50'); activeTabBtn.classList.remove('text-ink/60'); }
+
+  if (moduleNum === 2) setTimeout(drawColorWheel, 100);
+}
+
+function updateDashboardModuleStatus(){
+  for (let m = 1; m <= 4; m++) {
+    const el = document.getElementById('dash-mod-' + m + '-status');
+    if (!el) continue;
+    if (currentUserData.completedModules.includes(m)) {
+      el.innerHTML = '<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check mr-1"></i>Selesai</span>';
+    } else {
+      const answered = currentUserData.quizAnswers.filter(a => a.module === m).length;
+      el.innerText = answered > 0 ? 'Sedang berjalan' : 'Belum dimulai';
+    }
+  }
+}
+
+/* ---------------- QUIZ ---------------- */
+function renderAllQuizzes(){
+  for (let m = 1; m <= 4; m++) renderQuizForModule(m);
+}
+
+function renderQuizForModule(m){
+  const wrap = document.getElementById('quiz-wrap-' + m);
+  if (!wrap) return;
+  const questions = QUIZ_BANK[m];
+  const answeredForModule = currentUserData.quizAnswers.filter(a => a.module === m);
+  const isCompleted = currentUserData.completedModules.includes(m);
+
+  let html = '<h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-circle-question text-signal-500"></i> Kuis Cepat Modul ' + m + '</h3><div class="space-y-4">';
+
+  questions.forEach((item, qIdx) => {
+    const prevAnswer = answeredForModule.find(a => a.qIndex === qIdx);
+    html += '<div class="bg-paper rounded-xl p-4 space-y-2">';
+    html += '<p class="text-xs font-semibold text-ink">' + (qIdx + 1) + '. ' + item.q + '</p>';
+    html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">';
+    item.opts.forEach((opt, oIdx) => {
+      let cls = 'quiz-opt text-xs border border-ink/10 bg-white rounded-lg px-3 py-2 text-left';
+      if (prevAnswer) {
+        if (oIdx === item.correct) cls += ' correct';
+        else if (oIdx === prevAnswer.chosen) cls += ' wrong';
+        cls += ' pointer-events-none';
+      }
+      html += '<button type="button" class="' + cls + '" onclick="answerQuiz(' + m + ',' + qIdx + ',' + oIdx + ')" ' + (prevAnswer ? 'disabled' : '') + '>' + opt + '</button>';
+    });
+    html += '</div></div>';
+  });
+
+  html += '</div>';
+
+  if (!isCompleted) {
+    const allAnswered = answeredForModule.length >= questions.length;
+    html += '<button onclick="completeModule(' + m + ')" ' + (allAnswered ? '' : 'disabled') + ' class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold transition-colors ' + (allAnswered ? 'bg-ink text-white hover:bg-ink/90 cursor-pointer' : 'bg-ink/10 text-ink/30 cursor-not-allowed') + '">' + (allAnswered ? 'Tandai Modul Ini Selesai (+20 XP)' : 'Jawab semua soal untuk menyelesaikan modul') + '</button>';
+  } else {
+    html += '<div class="mt-4 inline-flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg"><i class="fa-solid fa-circle-check"></i> Modul ini sudah selesai</div>';
+  }
+
+  wrap.innerHTML = html;
+}
+
+function answerQuiz(module, qIndex, chosen){
+  const already = currentUserData.quizAnswers.find(a => a.module === module && a.qIndex === qIndex);
+  if (already) return;
+  const item = QUIZ_BANK[module][qIndex];
+  const isCorrect = chosen === item.correct;
+  currentUserData.quizAnswers.push({ module, qIndex, question: item.q, chosen, correct: item.correct, isCorrect, at: new Date().toISOString() });
+  if (isCorrect) currentUserData.xp += 10;
+  refreshHeaderStats();
+  renderQuizForModule(module);
+  saveUserData();
+}
+
+function completeModule(m){
+  if (currentUserData.completedModules.includes(m)) return;
+  currentUserData.completedModules.push(m);
+  currentUserData.xp += 20;
+  refreshHeaderStats();
+  updateDashboardModuleStatus();
+  renderQuizForModule(m);
+  saveUserData();
+}
+
+/* ---------------- CHALLENGE MINI-GAME ---------------- */
+function checkChallengeAnswer(option){
+  const feedback = document.getElementById('challenge-feedback');
+  feedback.classList.remove('hidden');
+  const isCorrect = option === 'B';
+
+  if (isCorrect) {
+    feedback.className = "p-4 rounded-xl text-xs font-medium border bg-emerald-50 border-emerald-200 text-emerald-800";
+    feedback.innerHTML = "<i class='fa-solid fa-circle-check text-emerald-600 mr-1.5'></i> <strong>Benar!</strong> Opsi B punya kontras teks jelas, hirarki visual dengan judul menonjol, dan tombol aksi (CTA) yang menarik.";
+    if (!currentUserData.challengeAnswers.some(c => c.correctAlready)) {
+      currentUserData.xp += 50;
+    }
+  } else {
+    feedback.className = "p-4 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800";
+    feedback.innerHTML = "<i class='fa-solid fa-circle-xmark text-rose-600 mr-1.5'></i> <strong>Kurang tepat.</strong> Opsi A pakai warna teks gelap di atas background gelap (kontras rendah) sehingga sulit dibaca.";
+  }
+
+  const alreadySolved = currentUserData.challengeAnswers.some(c => c.isCorrect);
+  currentUserData.challengeAnswers.push({ chosen: option, isCorrect, at: new Date().toISOString(), correctAlready: alreadySolved });
+  const solvedCount = currentUserData.challengeAnswers.some(c => c.isCorrect) ? 1 : 0;
+  document.getElementById('challenge-score-display').innerText = solvedCount + '/1';
+  refreshHeaderStats();
+  saveUserData();
+}
+
+/* ---------------- HIERARCHY / TYPOGRAPHY / GRID DEMOS ---------------- */
+function setHierarchyMode(mode){
+  const badge = document.getElementById('demo-badge');
+  const title = document.getElementById('demo-title');
+  const sub = document.getElementById('demo-subtitle');
+  const btn = document.getElementById('demo-btn');
+  if (mode === 'bad') {
+    badge.className = "text-xs font-normal text-white/30";
+    title.className = "text-sm font-normal text-white/40";
+    sub.className = "text-sm font-normal text-white/30";
+    btn.className = "bg-white/10 text-white/30 text-sm px-2 py-1 rounded";
+  } else {
+    badge.className = "text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded";
+    title.className = "font-bold text-2xl text-white";
+    sub.className = "text-sm text-white/60 max-w-xs";
+    btn.className = "bg-signal-500 hover:bg-signal-600 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-lg";
+  }
+}
+function setHierarchyBg(type){
+  const preview = document.getElementById('hierarchy-preview');
+  if (type === 'dark') preview.className = "bg-white/5 rounded-xl p-6 border border-white/10 flex flex-col justify-center items-center text-center space-y-3 min-h-[220px] text-white";
+  else if (type === 'light') preview.className = "bg-slate-100 rounded-xl p-6 border border-slate-300 flex flex-col justify-center items-center text-center space-y-3 min-h-[220px] text-slate-900";
+  else if (type === 'low') preview.className = "bg-white/10 rounded-xl p-6 border border-white/10 flex flex-col justify-center items-center text-center space-y-3 min-h-[220px] text-white/30";
+}
+
+function drawColorWheel(){
+  const canvas = document.getElementById('colorWheelCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const radius = canvas.width / 2;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let angle = 0; angle < 360; angle += 1) {
+    const startAngle = (angle - 2) * Math.PI / 180;
+    const endAngle = (angle + 2) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(radius, radius);
+    ctx.arc(radius, radius, radius - 10, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = 'hsl(' + angle + ', 100%, 50%)';
+    ctx.fill();
+  }
+  ctx.beginPath();
+  ctx.arc(radius, radius, radius - 55, 0, 2 * Math.PI);
+  ctx.fillStyle = '#15171C';
+  ctx.fill();
+  updatePaletteDisplay();
+}
+
+function setupColorWheelEvents(){
+  const canvas = document.getElementById('colorWheelCanvas');
+  if (!canvas) return;
+  canvas.addEventListener('click', function(e){
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left - canvas.width / 2;
+    const y = e.clientY - rect.top - canvas.height / 2;
+    let angle = Math.atan2(y, x) * (180 / Math.PI);
+    if (angle < 0) angle += 360;
+    selectedColorHue = Math.round(angle);
+    updatePaletteDisplay();
+  });
+}
+
+function setColorHarmony(harmony){
+  currentHarmony = harmony;
+  document.querySelectorAll('.harm-btn').forEach(btn => {
+    btn.classList.remove('border-signal-500','bg-signal-500/10','text-white');
+    btn.classList.add('border-white/10','bg-white/5','text-white/60');
+  });
+  const activeBtn = document.getElementById('harm-' + harmony);
+  if (activeBtn) { activeBtn.classList.add('border-signal-500','bg-signal-500/10','text-white'); activeBtn.classList.remove('border-white/10','bg-white/5','text-white/60'); }
+  updatePaletteDisplay();
+}
+
+function updatePaletteDisplay(){
+  const container = document.getElementById('palette-swatches');
+  if (!container) return;
+  let hues = [];
+  if (currentHarmony === 'complementary') hues = [selectedColorHue, (selectedColorHue + 180) % 360];
+  else if (currentHarmony === 'analogous') hues = [selectedColorHue, (selectedColorHue + 30) % 360, (selectedColorHue + 60) % 360];
+  else if (currentHarmony === 'triadic') hues = [selectedColorHue, (selectedColorHue + 120) % 360, (selectedColorHue + 240) % 360];
+  else if (currentHarmony === 'monochromatic') hues = [selectedColorHue, selectedColorHue, selectedColorHue];
+
+  container.innerHTML = '';
+  hues.forEach((h, idx) => {
+    const lightness = currentHarmony === 'monochromatic' ? 30 + (idx * 25) : 50;
+    const hslColor = 'hsl(' + h + ', 85%, ' + lightness + '%)';
+    const swatch = document.createElement('div');
+    swatch.className = 'flex-1 flex flex-col justify-end p-2 text-[10px] font-mono font-bold text-white shadow-inner';
+    swatch.style.backgroundColor = hslColor;
+    swatch.innerHTML = '<span>' + Math.round(h) + '&deg;</span>';
+    container.appendChild(swatch);
+  });
+
+  const primaryColor = 'hsl(' + hues[0] + ', 85%, 50%)';
+  const accentColor = 'hsl(' + (hues[1] || hues[0]) + ', 85%, 50%)';
+  const card = document.getElementById('color-card-preview');
+  const cardBtn = document.getElementById('preview-card-btn');
+  if (card && cardBtn) { card.style.borderColor = primaryColor; cardBtn.style.backgroundColor = accentColor; cardBtn.style.color = '#ffffff'; }
+}
+
+function updateTypoLab(){
+  const fontChoice = document.getElementById('typo-font-family').value;
+  const leadingVal = document.getElementById('typo-leading-slider').value;
+  const trackingVal = document.getElementById('typo-tracking-slider').value;
+  document.getElementById('typo-leading-val').innerText = leadingVal;
+  document.getElementById('typo-tracking-val').innerText = trackingVal + 'px';
+  const title = document.getElementById('typo-demo-title');
+  const body = document.getElementById('typo-demo-body');
+  if (title && body) {
+    body.className = 'text-sm text-white/60 transition-all ' + fontChoice;
+    body.style.lineHeight = leadingVal;
+    body.style.letterSpacing = trackingVal + 'px';
+    title.className = 'text-xl font-bold text-white ' + fontChoice;
+  }
+}
+
+function toggleDemoGrid(){
+  const overlay = document.getElementById('demo-grid-overlay');
+  if (overlay) overlay.classList.toggle('opacity-0');
+}
+
+/* ---------------- STUDIO CANVAS ---------------- */
+function addTextToCanvas(customText){
+  const newElem = { id: 'el-' + (elementIdCounter++), type: 'text', text: customText || 'Teks Baru (Edit Me)', x: 40 + (canvasElements.length * 15), y: 40 + (canvasElements.length * 15), color: '#1e293b', fontSize: 22, zIndex: canvasElements.length + 1 };
+  canvasElements.push(newElem);
+  renderCanvas();
+  selectElement(newElem.id);
+}
+
+function addShapeToCanvas(shapeType){
+  const newElem = { id: 'el-' + (elementIdCounter++), type: shapeType, x: 60 + (canvasElements.length * 15), y: 60 + (canvasElements.length * 15), color: shapeType === 'rect' ? '#3b82f6' : (shapeType === 'circle' ? '#10b981' : '#f59e0b'), size: 80, zIndex: canvasElements.length + 1 };
+  canvasElements.push(newElem);
+  renderCanvas();
+  selectElement(newElem.id);
+}
+
+function renderCanvas(){
+  const container = document.getElementById('canvas-layers');
+  if (!container) return;
+  container.innerHTML = '';
+  canvasElements.forEach(el => {
+    const item = document.createElement('div');
+    item.id = el.id;
+    item.className = 'absolute cursor-move select-none p-2 rounded transition-shadow ' + (selectedElementId === el.id ? 'ring-2 ring-signal-500 ring-offset-2' : '');
+    item.style.left = el.x + 'px';
+    item.style.top = el.y + 'px';
+    item.style.zIndex = el.zIndex;
+
+    if (el.type === 'text') {
+      item.style.color = el.color; item.style.fontSize = el.fontSize + 'px'; item.style.fontWeight = 'bold'; item.innerText = el.text;
+    } else if (el.type === 'rect') {
+      item.style.width = el.size + 'px'; item.style.height = (el.size * 0.75) + 'px'; item.style.backgroundColor = el.color; item.style.borderRadius = '12px';
+    } else if (el.type === 'circle') {
+      item.style.width = el.size + 'px'; item.style.height = el.size + 'px'; item.style.backgroundColor = el.color; item.style.borderRadius = '9999px';
+    } else if (el.type === 'badge') {
+      item.className += ' flex items-center justify-center text-white font-bold text-xs shadow-md';
+      item.style.width = el.size + 'px'; item.style.height = el.size + 'px'; item.style.backgroundColor = el.color;
+      item.style.clipPath = 'polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%)';
+      item.innerText = 'PROMO';
+    }
+
+    item.addEventListener('click', (e) => { e.stopPropagation(); selectElement(el.id); });
+    makeDraggable(item, el);
+    container.appendChild(item);
+  });
+}
+
+function makeDraggable(element, dataObj){
+  let posX = 0, posY = 0, mouseX = 0, mouseY = 0;
+  element.onmousedown = dragMouseDown;
+  function dragMouseDown(e){
+    e = e || window.event; e.preventDefault();
+    mouseX = e.clientX; mouseY = e.clientY;
+    document.onmouseup = closeDragElement; document.onmousemove = elementDrag;
+    selectElement(dataObj.id);
+  }
+  function elementDrag(e){
+    e = e || window.event; e.preventDefault();
+    posX = mouseX - e.clientX; posY = mouseY - e.clientY;
+    mouseX = e.clientX; mouseY = e.clientY;
+    dataObj.x = Math.max(0, element.offsetLeft - posX);
+    dataObj.y = Math.max(0, element.offsetTop - posY);
+    element.style.left = dataObj.x + 'px'; element.style.top = dataObj.y + 'px';
+  }
+  function closeDragElement(){ document.onmouseup = null; document.onmousemove = null; }
+}
+
+function selectElement(id){
+  selectedElementId = id;
+  renderCanvas();
+  const elem = canvasElements.find(e => e.id === id);
+  const noSelMsg = document.getElementById('no-selection-msg');
+  const inspector = document.getElementById('inspector-controls');
+  const textGroup = document.getElementById('prop-text-group');
+  if (elem) {
+    noSelMsg.classList.add('hidden');
+    inspector.classList.remove('hidden');
+    if (elem.type === 'text') {
+      textGroup.classList.remove('hidden');
+      document.getElementById('prop-text-val').value = elem.text;
+      document.getElementById('prop-size-val').value = elem.fontSize;
+      document.getElementById('prop-size-lbl').innerText = elem.fontSize + 'px';
+    } else {
+      textGroup.classList.add('hidden');
+      document.getElementById('prop-size-val').value = elem.size || 60;
+      document.getElementById('prop-size-lbl').innerText = (elem.size || 60) + 'px';
+    }
+    document.getElementById('prop-color-val').value = elem.color.startsWith('#') ? elem.color : '#3b82f6';
+    document.getElementById('prop-color-hex').innerText = elem.color;
+  }
+}
+
+function updateSelectedElement(prop, value){
+  if (!selectedElementId) return;
+  const elem = canvasElements.find(e => e.id === selectedElementId);
+  if (!elem) return;
+  if (prop === 'text') elem.text = value;
+  if (prop === 'color') { elem.color = value; document.getElementById('prop-color-hex').innerText = value; }
+  if (prop === 'size') {
+    if (elem.type === 'text') elem.fontSize = parseInt(value); else elem.size = parseInt(value);
+    document.getElementById('prop-size-lbl').innerText = value + 'px';
+  }
+  renderCanvas();
+}
+
+function moveLayer(direction){
+  if (!selectedElementId) return;
+  const index = canvasElements.findIndex(e => e.id === selectedElementId);
+  if (index < 0) return;
+  if (direction === 'front' && index < canvasElements.length - 1) {
+    const t = canvasElements[index]; canvasElements[index] = canvasElements[index + 1]; canvasElements[index + 1] = t;
+  } else if (direction === 'back' && index > 0) {
+    const t = canvasElements[index]; canvasElements[index] = canvasElements[index - 1]; canvasElements[index - 1] = t;
+  }
+  renderCanvas();
+}
+
+function deleteSelectedElement(){
+  if (!selectedElementId) return;
+  canvasElements = canvasElements.filter(e => e.id !== selectedElementId);
+  selectedElementId = null;
+  document.getElementById('no-selection-msg').classList.remove('hidden');
+  document.getElementById('inspector-controls').classList.add('hidden');
+  renderCanvas();
+}
+
+function clearCanvas(){
+  canvasElements = [];
+  selectedElementId = null;
+  document.getElementById('no-selection-msg').classList.remove('hidden');
+  document.getElementById('inspector-controls').classList.add('hidden');
+  renderCanvas();
+}
+
+function toggleCanvasGrid(){
+  const grid = document.getElementById('studio-grid-guide');
+  if (grid) grid.classList.toggle('hidden');
+}
+
+function changeCanvasPreset(){
+  const preset = document.getElementById('canvas-preset').value;
+  const container = document.getElementById('studio-canvas-container');
+  if (preset === 'square') { container.style.width = '380px'; container.style.height = '380px'; }
+  else if (preset === 'poster') { container.style.width = '320px'; container.style.height = '420px'; }
+  else if (preset === 'banner') { container.style.width = '440px'; container.style.height = '260px'; }
+}
+
+function loadTemplate(templateType){
+  clearCanvas();
+  if (templateType === 'poster') {
+    canvasElements = [
+      { id: 'el-1', type: 'rect', x: 20, y: 20, color: '#1e1b4b', size: 280, zIndex: 1 },
+      { id: 'el-2', type: 'text', text: 'CREATIVE FEST', x: 40, y: 50, color: '#FF4B1F', fontSize: 24, zIndex: 2 },
+      { id: 'el-3', type: 'text', text: 'Pameran Desain Grafis 2026', x: 40, y: 90, color: '#ffffff', fontSize: 13, zIndex: 3 },
+      { id: 'el-4', type: 'badge', x: 200, y: 130, color: '#ec4899', size: 70, zIndex: 4 }
+    ];
+  } else if (templateType === 'logo') {
+    canvasElements = [
+      { id: 'el-1', type: 'circle', x: 130, y: 100, color: '#0EA5A8', size: 120, zIndex: 1 },
+      { id: 'el-2', type: 'text', text: 'RID STUDIO', x: 110, y: 240, color: '#15171C', fontSize: 24, zIndex: 2 }
+    ];
+  }
+  renderCanvas();
+}
+
+function promptSaveWork(){
+  if (canvasElements.length === 0) { alert('Tambahkan minimal satu elemen ke kanvas sebelum menyimpan.'); return; }
+  const title = prompt('Beri nama karya ini:', 'Karya Desain #' + (currentUserData.gallery.length + 1));
+  if (title === null) return;
+  saveWorkToGallery(title.trim() || 'Karya Tanpa Judul');
+}
+
+function saveWorkToGallery(title){
+  const container = document.getElementById('studio-canvas-container');
+  const work = {
+    id: 'work-' + Date.now(),
+    title,
+    date: new Date().toLocaleDateString('id-ID'),
+    elements: JSON.parse(JSON.stringify(canvasElements)),
+    canvasWidth: container.offsetWidth,
+    canvasHeight: container.offsetHeight
+  };
+  currentUserData.gallery.push(work);
+  currentUserData.xp += 30;
+  refreshHeaderStats();
+  renderGallery();
+  saveUserData();
+  alert('Karya "' + title + '" berhasil disimpan ke Galeri Karya! +30 XP');
+}
+
+function renderGallery(){
+  const grid = document.getElementById('saved-gallery-grid');
+  if (!grid) return;
+  if (currentUserData.gallery.length === 0) {
+    grid.innerHTML = '<div class="text-center py-12 text-ink/30 col-span-full border-2 border-dashed border-ink/10 rounded-xl"><i class="fa-solid fa-images text-3xl mb-2 block"></i><p class="text-xs">Belum ada karya. Buka <strong>Studio Desain</strong> dan simpan karya pertamamu!</p></div>';
+    return;
+  }
+  grid.innerHTML = '';
+  currentUserData.gallery.slice().reverse().forEach((item) => {
+    const card = document.createElement('div');
+    card.className = 'p-3 bg-paper border border-ink/10 rounded-xl space-y-2';
+    const previewId = 'prev-' + item.id;
+    card.innerHTML = '<div id="' + previewId + '" class="relative w-full h-32 bg-white rounded-lg overflow-hidden border border-ink/5"></div><h4 class="font-bold text-xs text-ink px-1">' + escapeHtml(item.title) + '</h4><span class="text-[10px] text-ink/40 block px-1">Dibuat pada: ' + item.date + '</span>';
+    grid.appendChild(card);
+    renderMiniCanvas(document.getElementById(previewId), item.elements, item.canvasWidth || 380, item.canvasHeight || 380);
+  });
+}
+
+function renderMiniCanvas(container, elements, origW, origH){
+  if (!container) return;
+  const boxW = container.clientWidth || 260, boxH = container.clientHeight || 128;
+  const scale = Math.min(boxW / origW, boxH / origH);
+  const wrap = document.createElement('div');
+  wrap.style.position = 'absolute';
+  wrap.style.left = '50%'; wrap.style.top = '50%';
+  wrap.style.width = origW + 'px'; wrap.style.height = origH + 'px';
+  wrap.style.transform = 'translate(-50%,-50%) scale(' + scale + ')';
+  wrap.style.transformOrigin = 'center';
+
+  (elements || []).forEach(el => {
+    const item = document.createElement('div');
+    item.style.position = 'absolute';
+    item.style.left = el.x + 'px'; item.style.top = el.y + 'px';
+    item.style.zIndex = el.zIndex;
+    if (el.type === 'text') { item.style.color = el.color; item.style.fontSize = el.fontSize + 'px'; item.style.fontWeight = 'bold'; item.innerText = el.text; }
+    else if (el.type === 'rect') { item.style.width = el.size + 'px'; item.style.height = (el.size * 0.75) + 'px'; item.style.background = el.color; item.style.borderRadius = '12px'; }
+    else if (el.type === 'circle') { item.style.width = el.size + 'px'; item.style.height = el.size + 'px'; item.style.background = el.color; item.style.borderRadius = '9999px'; }
+    else if (el.type === 'badge') { item.style.width = el.size + 'px'; item.style.height = el.size + 'px'; item.style.background = el.color; item.style.display='flex'; item.style.alignItems='center'; item.style.justifyContent='center'; item.style.color='#fff'; item.style.fontSize='10px'; item.style.fontWeight='bold'; item.style.clipPath = 'polygon(50% 0%, 80% 10%, 100% 35%, 100% 70%, 80% 90%, 50% 100%, 20% 90%, 0% 70%, 0% 35%, 20% 10%)'; item.innerText='PROMO'; }
+    wrap.appendChild(item);
+  });
+  container.innerHTML = '';
+  container.appendChild(wrap);
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.innerText = str;
+  return d.innerHTML;
+}
+
+/* ================= ADMIN DASHBOARD ================= */
+async function loadAllStudents(){
+  const snap = await db.collection('users').where('role', '==', 'siswa').get();
+  allStudentsCache = snap.docs.map(d => Object.assign({ uid: d.id }, d.data()));
+  renderAdminStats();
+  renderStudentsTable();
+}
+
+function understandingPct(student){
+  const answers = student.quizAnswers || [];
+  if (answers.length === 0) return 0;
+  const correct = answers.filter(a => a.isCorrect).length;
+  return Math.round((correct / answers.length) * 100);
+}
+
+function renderAdminStats(){
+  const total = allStudentsCache.length;
+  document.getElementById('stat-total-students').innerText = total;
+  const avgXp = total ? Math.round(allStudentsCache.reduce((s, u) => s + (u.xp || 0), 0) / total) : 0;
+  document.getElementById('stat-avg-xp').innerText = avgXp;
+  const avgUnderstanding = total ? Math.round(allStudentsCache.reduce((s, u) => s + understandingPct(u), 0) / total) : 0;
+  document.getElementById('stat-avg-understanding').innerText = avgUnderstanding + '%';
+  const totalWorks = allStudentsCache.reduce((s, u) => s + ((u.gallery || []).length), 0);
+  document.getElementById('stat-total-works').innerText = totalWorks;
+}
+
+function renderStudentsTable(){
+  const tbody = document.getElementById('admin-students-tbody');
+  const searchVal = (document.getElementById('admin-search').value || '').toLowerCase();
+  const list = allStudentsCache.filter(s => (s.name || '').toLowerCase().includes(searchVal) || (s.username || '').toLowerCase().includes(searchVal));
+
+  document.getElementById('admin-empty-state').classList.toggle('hidden', allStudentsCache.length !== 0);
+
+  if (list.length === 0) { tbody.innerHTML = ''; return; }
+
+  tbody.innerHTML = list.map(s => {
+    const pct = understandingPct(s);
+    const barColor = pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#f43f5e';
+    return '<tr class="border-b border-ink/5 hover:bg-paper/60 cursor-pointer" onclick="openStudentDetail(\'' + s.uid + '\')">' +
+      '<td class="p-3 font-semibold text-ink">' + escapeHtml(s.name || '-') + '</td>' +
+      '<td class="p-3 text-ink/50">@' + escapeHtml(s.username || '-') + '</td>' +
+      '<td class="p-3 text-ink/70">' + (s.xp || 0) + '</td>' +
+      '<td class="p-3 text-ink/70">' + ((s.completedModules || []).length) + '/4</td>' +
+      '<td class="p-3"><div class="flex items-center gap-2"><div class="bar-track w-20"><div class="bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div><span class="text-ink/50 text-[11px]">' + pct + '%</span></div></td>' +
+      '<td class="p-3 text-ink/70">' + ((s.gallery || []).length) + '</td>' +
+      '<td class="p-3 text-signal-600 text-xs font-semibold">Detail &rarr;</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function openStudentDetail(uid){
+  const s = allStudentsCache.find(x => x.uid === uid);
+  if (!s) return;
+  const pct = understandingPct(s);
+
+  let html = '';
+  html += '<div class="bg-white border border-ink/10 rounded-2xl p-5 space-y-1">';
+  html += '<h4 class="font-heading font-bold text-lg text-ink">' + escapeHtml(s.name || '-') + '</h4>';
+  html += '<p class="text-xs text-ink/40">@' + escapeHtml(s.username || '-') + '</p>';
+  html += '<div class="grid grid-cols-3 gap-3 pt-3 text-center">';
+  html += '<div class="bg-paper rounded-xl p-2"><p class="text-lg font-heading font-bold text-ink">' + (s.xp || 0) + '</p><p class="text-[10px] text-ink/40">XP</p></div>';
+  html += '<div class="bg-paper rounded-xl p-2"><p class="text-lg font-heading font-bold text-ink">' + ((s.completedModules || []).length) + '/4</p><p class="text-[10px] text-ink/40">Modul Selesai</p></div>';
+  html += '<div class="bg-paper rounded-xl p-2"><p class="text-lg font-heading font-bold text-tealc-600">' + pct + '%</p><p class="text-[10px] text-ink/40">Pemahaman</p></div>';
+  html += '</div></div>';
+
+  html += '<div class="bg-white border border-ink/10 rounded-2xl p-5 space-y-3">';
+  html += '<h5 class="font-bold text-xs uppercase tracking-wider text-ink/40">Pemahaman per Modul</h5>';
+  for (let m = 1; m <= 4; m++) {
+    const answers = (s.quizAnswers || []).filter(a => a.module === m);
+    const correct = answers.filter(a => a.isCorrect).length;
+    const modPct = answers.length ? Math.round((correct / answers.length) * 100) : 0;
+    const barColor = modPct >= 70 ? '#10b981' : modPct >= 40 ? '#f59e0b' : (answers.length ? '#f43f5e' : '#d4d1c9');
+    const doneTag = (s.completedModules || []).includes(m) ? ' <span class="text-emerald-600"><i class="fa-solid fa-circle-check"></i></span>' : '';
+    html += '<div><div class="flex justify-between text-xs mb-1"><span class="font-medium text-ink/70">Modul ' + m + ' · ' + MODULE_NAMES[m] + doneTag + '</span><span class="text-ink/40">' + correct + '/' + answers.length + ' benar</span></div><div class="bar-track"><div class="bar-fill" style="width:' + modPct + '%;background:' + barColor + '"></div></div></div>';
+  }
+  html += '</div>';
+
+  html += '<div class="bg-white border border-ink/10 rounded-2xl p-5 space-y-3">';
+  html += '<h5 class="font-bold text-xs uppercase tracking-wider text-ink/40">Riwayat Jawaban Kuis</h5>';
+  const qa = (s.quizAnswers || []).slice().sort((a,b) => (a.at || '').localeCompare(b.at || ''));
+  if (qa.length === 0) {
+    html += '<p class="text-xs text-ink/30">Belum ada kuis yang dikerjakan.</p>';
+  } else {
+    html += '<div class="space-y-2 max-h-56 overflow-y-auto">';
+    qa.forEach(a => {
+      html += '<div class="text-xs p-2.5 rounded-lg border ' + (a.isCorrect ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50') + '"><p class="font-medium text-ink/80">' + escapeHtml(a.question) + '</p><p class="' + (a.isCorrect ? 'text-emerald-700' : 'text-rose-700') + ' font-semibold mt-0.5">' + (a.isCorrect ? 'Jawaban benar' : 'Jawaban kurang tepat') + '</p></div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="bg-white border border-ink/10 rounded-2xl p-5 space-y-3">';
+  html += '<h5 class="font-bold text-xs uppercase tracking-wider text-ink/40">Galeri Karya (' + ((s.gallery || []).length) + ')</h5>';
+  if (!s.gallery || s.gallery.length === 0) {
+    html += '<p class="text-xs text-ink/30">Belum ada karya tersimpan.</p>';
+  } else {
+    html += '<div class="grid grid-cols-2 gap-3">';
+    s.gallery.slice().reverse().forEach((w, i) => {
+      const pid = 'admin-prev-' + uid + '-' + i;
+      html += '<div class="space-y-1"><div id="' + pid + '" class="relative w-full h-24 bg-paper rounded-lg overflow-hidden border border-ink/10"></div><p class="text-[10px] text-ink/50 truncate">' + escapeHtml(w.title) + '</p></div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  document.getElementById('admin-detail-content').innerHTML = html;
+  document.getElementById('admin-detail-overlay').classList.remove('hidden');
+
+  if (s.gallery && s.gallery.length) {
+    s.gallery.slice().reverse().forEach((w, i) => {
+      const pid = 'admin-prev-' + uid + '-' + i;
+      renderMiniCanvas(document.getElementById(pid), w.elements, w.canvasWidth || 380, w.canvasHeight || 380);
+    });
+  }
+}
+
+function closeStudentDetail(){
+  document.getElementById('admin-detail-overlay').classList.add('hidden');
+}
+</script>
+</body>
+</html>
