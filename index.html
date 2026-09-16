@@ -262,7 +262,7 @@
         <div class="absolute -right-10 -bottom-10 opacity-[0.08] pointer-events-none"><i class="fa-solid fa-icons text-[220px]"></i></div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div onclick="openModule(1)" class="bg-white p-5 rounded-2xl border border-ink/10 hover:border-blue-400 hover:shadow-md transition-all cursor-pointer group">
           <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-shapes text-xl"></i></div>
           <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Modul 1</span>
@@ -290,6 +290,20 @@
           <h3 class="font-bold text-ink text-base mt-2">Komposisi &amp; Grid</h3>
           <p class="text-xs text-ink/50 mt-1">Rule of Thirds, alignment &amp; ruang kosong.</p>
           <div class="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between text-xs text-ink/40"><span id="dash-mod-4-status">Belum dimulai</span><i class="fa-solid fa-arrow-right"></i></div>
+        </div>
+        <div onclick="openModule(5)" class="bg-white p-5 rounded-2xl border border-ink/10 hover:border-rose-400 hover:shadow-md transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-gem text-xl"></i></div>
+          <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">Modul 5</span>
+          <h3 class="font-bold text-ink text-base mt-2">Branding &amp; Logo</h3>
+          <p class="text-xs text-ink/50 mt-1">Jenis-jenis logo &amp; konsistensi identitas visual.</p>
+          <div class="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between text-xs text-ink/40"><span id="dash-mod-5-status">Belum dimulai</span><i class="fa-solid fa-arrow-right"></i></div>
+        </div>
+        <div onclick="openModule(6)" class="bg-white p-5 rounded-2xl border border-ink/10 hover:border-tealc-400 hover:shadow-md transition-all cursor-pointer group">
+          <div class="w-12 h-12 rounded-xl bg-tealc-100 text-tealc-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"><i class="fa-solid fa-mobile-screen text-xl"></i></div>
+          <span class="text-xs font-semibold text-tealc-600 bg-tealc-50 px-2 py-0.5 rounded">Modul 6</span>
+          <h3 class="font-bold text-ink text-base mt-2">Desain Media Sosial</h3>
+          <p class="text-xs text-ink/50 mt-1">Format feed vs story &amp; area aman konten.</p>
+          <div class="mt-4 pt-3 border-t border-ink/5 flex items-center justify-between text-xs text-ink/40"><span id="dash-mod-6-status">Belum dimulai</span><i class="fa-solid fa-arrow-right"></i></div>
         </div>
       </div>
 
@@ -320,6 +334,8 @@
         <button onclick="openModule(2)" id="mod-tab-2" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-palette mr-1.5"></i> 2. Warna</button>
         <button onclick="openModule(3)" id="mod-tab-3" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-font mr-1.5"></i> 3. Tipografi</button>
         <button onclick="openModule(4)" id="mod-tab-4" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-grip mr-1.5"></i> 4. Grid</button>
+        <button onclick="openModule(5)" id="mod-tab-5" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-gem mr-1.5"></i> 5. Branding</button>
+        <button onclick="openModule(6)" id="mod-tab-6" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-mobile-screen mr-1.5"></i> 6. Sosial Media</button>
       </div>
 
       <!-- MODULE 1 -->
@@ -482,6 +498,84 @@
           </div>
 
           <div id="quiz-wrap-4" class="pt-2 border-t border-ink/10"></div>
+        </div>
+      </div>
+
+      <!-- MODULE 5 -->
+      <div id="module-content-5" class="module-body hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-sm">5</span> Branding &amp; Identitas Visual</h2>
+          <p class="text-sm text-ink/60 leading-relaxed">Logo adalah wajah sebuah brand. Ada beberapa jenis logo, dan yang tak kalah penting: brand yang kuat harus <strong>konsisten</strong> menjaga warna, font, dan gaya visualnya di semua media.</p>
+
+          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
+            <h3 class="font-heading font-bold text-rose-400 flex items-center gap-2 text-base"><i class="fa-solid fa-shapes"></i> Simulator: Jenis-Jenis Logo</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              <div class="lg:col-span-5 grid grid-cols-1 gap-2 text-xs">
+                <button onclick="setLogoType('wordmark')" id="logo-btn-wordmark" class="logo-type-btn text-left p-2.5 rounded-lg border border-rose-500 bg-rose-500/10 font-semibold">Wordmark</button>
+                <button onclick="setLogoType('lettermark')" id="logo-btn-lettermark" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Lettermark</button>
+                <button onclick="setLogoType('pictorial')" id="logo-btn-pictorial" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Pictorial Mark</button>
+                <button onclick="setLogoType('abstract')" id="logo-btn-abstract" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Abstract Mark</button>
+                <button onclick="setLogoType('combination')" id="logo-btn-combination" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Combination Mark</button>
+              </div>
+              <div class="lg:col-span-7 bg-white/5 rounded-xl p-6 border border-white/10 min-h-[220px] flex flex-col items-center justify-center text-center space-y-3">
+                <div id="logo-demo-visual" class="w-20 h-20 rounded-2xl bg-rose-500 flex items-center justify-center text-3xl font-heading font-bold">Aa</div>
+                <h4 id="logo-demo-title" class="font-bold text-lg">Wordmark</h4>
+                <p id="logo-demo-desc" class="text-xs text-white/50 max-w-xs">Logo berupa nama brand yang ditulis dengan gaya huruf (tipografi) khas, tanpa simbol tambahan. Contoh: Google, Coca-Cola.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h3 class="font-heading font-bold text-rose-400 flex items-center gap-2 text-base"><i class="fa-solid fa-swatchbook"></i> Kenapa Konsistensi Penting?</h3>
+              <div class="flex bg-white/5 rounded-lg p-1 text-xs">
+                <button onclick="setBrandConsistency(true)" id="brand-btn-consistent" class="px-3 py-1.5 rounded-md font-semibold bg-rose-500 text-white">Konsisten</button>
+                <button onclick="setBrandConsistency(false)" id="brand-btn-inconsistent" class="px-3 py-1.5 rounded-md font-semibold text-white/50">Tidak Konsisten</button>
+              </div>
+            </div>
+            <div id="brand-cards-preview" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+            <p id="brand-consistency-note" class="text-xs text-white/50"></p>
+          </div>
+
+          <div id="quiz-wrap-5" class="pt-2 border-t border-ink/10"></div>
+        </div>
+      </div>
+
+      <!-- MODULE 6 -->
+      <div id="module-content-6" class="module-body hidden space-y-6">
+        <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-tealc-100 text-tealc-600 flex items-center justify-center text-sm">6</span> Desain untuk Media Sosial</h2>
+          <p class="text-sm text-ink/60 leading-relaxed">Setiap platform punya ukuran &amp; area aman berbeda. Elemen penting (teks, wajah, logo) harus diletakkan jauh dari tepi agar tidak terpotong atau tertutup tombol aplikasi.</p>
+
+          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <h3 class="font-heading font-bold text-tealc-400 flex items-center gap-2 text-base"><i class="fa-solid fa-crop-simple"></i> Simulator: Format &amp; Area Aman</h3>
+              <div class="flex bg-white/5 rounded-lg p-1 text-xs">
+                <button onclick="setSocialFormat('feed')" id="social-btn-feed" class="px-3 py-1.5 rounded-md font-semibold bg-tealc-500 text-white">Post Feed (1:1)</button>
+                <button onclick="setSocialFormat('story')" id="social-btn-story" class="px-3 py-1.5 rounded-md font-semibold text-white/50">Story (9:16)</button>
+              </div>
+            </div>
+            <div class="flex justify-center">
+              <div id="social-frame" class="relative bg-white/5 border-2 border-white/10 overflow-hidden transition-all" style="width:260px;height:260px;">
+                <div id="social-safe-zone" class="absolute border-2 border-dashed border-tealc-400/70 pointer-events-none" style="inset:10%;"></div>
+                <div class="absolute inset-0 flex items-center justify-center p-4">
+                  <div class="text-center space-y-2">
+                    <div class="w-10 h-10 mx-auto rounded-full bg-tealc-400"></div>
+                    <p class="text-xs font-bold">Judul Konten Utama</p>
+                    <p class="text-[10px] text-white/40">Teks & logo aman di dalam garis putus-putus</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p id="social-format-note" class="text-xs text-white/50 text-center max-w-md mx-auto">Post Feed Instagram memakai rasio 1:1 (persegi) — elemen penting cukup aman selama tidak menempel tepi gambar.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-images text-tealc-600 text-xl mb-2"></i><h4 class="font-bold text-ink text-sm">Post Feed (1:1 / 4:5)</h4><p class="text-xs text-ink/50 mt-1">Dilihat sekilas saat scroll — judul & fokus utama harus langsung terlihat jelas.</p></div>
+            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-mobile-screen-button text-tealc-600 text-xl mb-2"></i><h4 class="font-bold text-ink text-sm">Story (9:16)</h4><p class="text-xs text-ink/50 mt-1">Bagian atas & bawah sering tertutup nama akun dan tombol balas — hindari taruh info penting di situ.</p></div>
+          </div>
+
+          <div id="quiz-wrap-6" class="pt-2 border-t border-ink/10"></div>
         </div>
       </div>
     </section>
@@ -659,13 +753,12 @@
 <script>
 /* ================= FIREBASE CONFIG — GANTI DENGAN MILIK ANDA ================= */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCTCtDYLEh4scnKTaD4DNkltwtKekC8HfY",
-  authDomain: "design-craft-studio.firebaseapp.com",
-  projectId: "design-craft-studio",
-  storageBucket: "design-craft-studio.firebasestorage.app",
-  messagingSenderId: "894884224993",
-  appId: "1:894884224993:web:53c5fd30e8f72ba4b6fca0",
-  measurementId: "G-X3Y0J4RFL2"
+  apiKey: "ISI_API_KEY_ANDA",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  storageBucket: "ISI_PROJECT_ID.appspot.com",
+  messagingSenderId: "ISI_SENDER_ID",
+  appId: "ISI_APP_ID"
 };
 const ADMIN_CODE = "TOMPOKERSAN2026"; // Ganti dengan kode rahasia Anda sendiri
 const EMAIL_DOMAIN = "designcraft.local";
@@ -697,9 +790,19 @@ const QUIZ_BANK = {
     { q: "Aturan membagi bidang jadi 3x3 untuk titik fokus disebut?", opts: ["Rule of Thirds", "Golden Ratio", "Kerning Grid", "Framing"], correct: 0 },
     { q: "Ruang kosong di sekitar elemen desain disebut?", opts: ["Padding Visual", "Negative Space", "Margin Aktif", "Blank Zone"], correct: 1 },
     { q: "Alignment (perataan) elemen penting untuk menciptakan?", opts: ["Efek acak", "Kerapian & keteraturan visual", "Warna kontras", "Ukuran besar"], correct: 1 }
+  ],
+  5: [
+    { q: "Logo berupa nama brand ditulis dengan gaya huruf khas disebut?", opts: ["Pictorial Mark", "Wordmark", "Abstract Mark", "Mascot Logo"], correct: 1 },
+    { q: "Mengapa konsistensi warna & font penting dalam branding?", opts: ["Supaya terlihat mewah", "Membangun pengenalan (recognition) brand di mata audiens", "Agar biaya produksi murah", "Tidak ada alasan khusus"], correct: 1 },
+    { q: "Logo berbentuk gambar/ikon tanpa teks disebut?", opts: ["Wordmark", "Lettermark", "Pictorial Mark", "Combination Mark"], correct: 2 }
+  ],
+  6: [
+    { q: "Rasio umum untuk post feed Instagram persegi adalah?", opts: ["16:9", "1:1", "9:16", "4:3"], correct: 1 },
+    { q: "Rasio umum untuk Instagram/WhatsApp Story adalah?", opts: ["1:1", "4:3", "9:16", "3:2"], correct: 2 },
+    { q: "Kenapa elemen penting sebaiknya dijauhkan dari tepi desain story/feed?", opts: ["Supaya lebih ramai", "Karena bisa terpotong crop otomatis platform atau tertutup tombol UI", "Tidak ada alasan khusus", "Supaya ukuran file kecil"], correct: 1 }
   ]
 };
-const MODULE_NAMES = { 1: "Elemen & Hirarki", 2: "Teori Warna", 3: "Tipografi", 4: "Layout & Grid" };
+const MODULE_NAMES = { 1: "Elemen & Hirarki", 2: "Teori Warna", 3: "Tipografi", 4: "Layout & Grid", 5: "Branding & Logo", 6: "Desain Media Sosial" };
 
 function defaultUserData(){
   return { xp: 0, completedModules: [], quizAnswers: [], challengeAnswers: [], gallery: [] };
@@ -728,8 +831,10 @@ window.addEventListener('load', () => {
 });
 
 function show(id){
+  // Pakai inline style (bukan class 'hidden') supaya tidak bentrok dengan
+  // class responsif seperti 'lg:flex' yang bisa memaksa elemen tetap tampil di layar lebar.
   ['screen-loading','screen-setup-warning','screen-auth','screen-app','screen-admin'].forEach(s => {
-    document.getElementById(s).classList.toggle('hidden', s !== id);
+    document.getElementById(s).style.display = (s === id) ? '' : 'none';
   });
 }
 
@@ -875,6 +980,7 @@ function initStudentApp(){
   renderGallery();
   updateDashboardModuleStatus();
   setupColorWheelEvents();
+  setBrandConsistency(true);
   renderCanvas();
   loadTemplate('poster');
   switchTab('dashboard');
@@ -883,7 +989,7 @@ function initStudentApp(){
 function refreshHeaderStats(){
   document.getElementById('user-xp').innerText = currentUserData.xp + ' XP';
   document.getElementById('user-xp-mobile').innerText = currentUserData.xp + ' XP';
-  document.getElementById('completed-count').innerText = currentUserData.completedModules.length + '/4 Modul';
+  document.getElementById('completed-count').innerText = currentUserData.completedModules.length + '/6 Modul';
 }
 
 function switchTab(tabName){
@@ -912,7 +1018,7 @@ function openModule(moduleNum){
 }
 
 function updateDashboardModuleStatus(){
-  for (let m = 1; m <= 4; m++) {
+  for (let m = 1; m <= 6; m++) {
     const el = document.getElementById('dash-mod-' + m + '-status');
     if (!el) continue;
     if (currentUserData.completedModules.includes(m)) {
@@ -926,7 +1032,7 @@ function updateDashboardModuleStatus(){
 
 /* ---------------- QUIZ ---------------- */
 function renderAllQuizzes(){
-  for (let m = 1; m <= 4; m++) renderQuizForModule(m);
+  for (let m = 1; m <= 6; m++) renderQuizForModule(m);
 }
 
 function renderQuizForModule(m){
@@ -1133,6 +1239,58 @@ function updateTypoLab(){
 function toggleDemoGrid(){
   const overlay = document.getElementById('demo-grid-overlay');
   if (overlay) overlay.classList.toggle('opacity-0');
+}
+
+/* ---------------- MODULE 5: BRANDING & LOGO DEMO ---------------- */
+const LOGO_TYPES = {
+  wordmark: { title: 'Wordmark', visual: 'Aa', shape: 'rounded-2xl', desc: 'Logo berupa nama brand yang ditulis dengan gaya huruf (tipografi) khas, tanpa simbol tambahan. Contoh: Google, Coca-Cola.' },
+  lettermark: { title: 'Lettermark', visual: 'DC', shape: 'rounded-2xl', desc: 'Logo berupa inisial/singkatan nama brand. Cocok untuk nama brand yang panjang. Contoh: IBM, HBO.' },
+  pictorial: { title: 'Pictorial Mark', visual: '<i class="fa-solid fa-feather-pointed"></i>', shape: 'rounded-full', desc: 'Logo berupa gambar/ikon tanpa teks. Butuh brand yang sudah sangat dikenal agar ikon saja cukup mewakili. Contoh: Apple, Twitter/X.' },
+  abstract: { title: 'Abstract Mark', visual: '<i class="fa-solid fa-diamond"></i>', shape: 'rounded-xl rotate-12', desc: 'Bentuk geometris abstrak yang tidak menggambarkan objek nyata, tapi mewakili nilai/konsep brand. Contoh: Adidas, Pepsi.' },
+  combination: { title: 'Combination Mark', visual: '<i class="fa-solid fa-palette"></i> DC', shape: 'rounded-2xl', desc: 'Gabungan simbol/ikon dengan teks nama brand. Paling fleksibel karena bisa dipakai terpisah maupun bersamaan. Contoh: Adidas (teks+logo), Lacoste.' }
+};
+function setLogoType(type){
+  document.querySelectorAll('.logo-type-btn').forEach(btn => { btn.classList.remove('border-rose-500','bg-rose-500/10'); btn.classList.add('border-white/10','bg-white/5','text-white/60'); });
+  const activeBtn = document.getElementById('logo-btn-' + type);
+  if (activeBtn) { activeBtn.classList.add('border-rose-500','bg-rose-500/10'); activeBtn.classList.remove('border-white/10','bg-white/5','text-white/60'); }
+  const data = LOGO_TYPES[type];
+  document.getElementById('logo-demo-visual').innerHTML = data.visual;
+  document.getElementById('logo-demo-visual').className = 'w-20 h-20 bg-rose-500 flex items-center justify-center text-3xl font-heading font-bold ' + data.shape;
+  document.getElementById('logo-demo-title').innerText = data.title;
+  document.getElementById('logo-demo-desc').innerText = data.desc;
+}
+function setBrandConsistency(isConsistent){
+  document.getElementById('brand-btn-consistent').className = 'px-3 py-1.5 rounded-md font-semibold ' + (isConsistent ? 'bg-rose-500 text-white' : 'text-white/50');
+  document.getElementById('brand-btn-inconsistent').className = 'px-3 py-1.5 rounded-md font-semibold ' + (!isConsistent ? 'bg-rose-500 text-white' : 'text-white/50');
+  const container = document.getElementById('brand-cards-preview');
+  const items = [
+    { label: 'Kartu Nama', icon: 'fa-id-card' },
+    { label: 'Profil Media Sosial', icon: 'fa-mobile-screen' },
+    { label: 'Kemasan Produk', icon: 'fa-box' }
+  ];
+  const colors = isConsistent ? ['#F43F5E','#F43F5E','#F43F5E'] : ['#3b82f6','#f59e0b','#10b981'];
+  const fonts = isConsistent ? ['font-heading','font-heading','font-heading'] : ['font-heading','font-sans','font-sans'];
+  container.innerHTML = items.map((it, i) =>
+    '<div class="p-4 rounded-xl border border-white/10" style="background:' + colors[i] + '22"><i class="fa-solid ' + it.icon + ' mb-2" style="color:' + colors[i] + '"></i><p class="text-xs font-bold ' + fonts[i] + '" style="color:' + colors[i] + '">' + it.label + '</p></div>'
+  ).join('');
+  document.getElementById('brand-consistency-note').innerHTML = isConsistent
+    ? '<i class="fa-solid fa-circle-check text-rose-400 mr-1"></i> Warna & gaya font sama di semua media — audiens langsung mengenali ini sebagai satu brand.'
+    : '<i class="fa-solid fa-circle-xmark text-white/30 mr-1"></i> Warna & font berbeda-beda di tiap media — audiens bisa bingung dan brand terlihat kurang profesional.';
+}
+
+/* ---------------- MODULE 6: SOCIAL MEDIA FORMAT DEMO ---------------- */
+function setSocialFormat(format){
+  const frame = document.getElementById('social-frame');
+  const note = document.getElementById('social-format-note');
+  document.getElementById('social-btn-feed').className = 'px-3 py-1.5 rounded-md font-semibold ' + (format === 'feed' ? 'bg-tealc-500 text-white' : 'text-white/50');
+  document.getElementById('social-btn-story').className = 'px-3 py-1.5 rounded-md font-semibold ' + (format === 'story' ? 'bg-tealc-500 text-white' : 'text-white/50');
+  if (format === 'feed') {
+    frame.style.width = '260px'; frame.style.height = '260px';
+    note.innerText = 'Post Feed Instagram memakai rasio 1:1 (persegi) — elemen penting cukup aman selama tidak menempel tepi gambar.';
+  } else {
+    frame.style.width = '160px'; frame.style.height = '284px';
+    note.innerText = 'Story memakai rasio 9:16 (vertikal). Area sekitar 10-15% dari atas & bawah sering tertutup nama akun / tombol balas — jangan taruh info penting di sana.';
+  }
 }
 
 /* ---------------- STUDIO CANVAS ---------------- */
@@ -1441,7 +1599,7 @@ function openStudentDetail(uid){
 
   html += '<div class="bg-white border border-ink/10 rounded-2xl p-5 space-y-3">';
   html += '<h5 class="font-bold text-xs uppercase tracking-wider text-ink/40">Pemahaman per Modul</h5>';
-  for (let m = 1; m <= 4; m++) {
+  for (let m = 1; m <= 6; m++) {
     const answers = (s.quizAnswers || []).filter(a => a.module === m);
     const correct = answers.filter(a => a.isCorrect).length;
     const modPct = answers.length ? Math.round((correct / answers.length) * 100) : 0;
