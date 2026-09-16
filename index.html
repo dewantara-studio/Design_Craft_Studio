@@ -753,13 +753,12 @@
 <script>
 /* ================= FIREBASE CONFIG — GANTI DENGAN MILIK ANDA ================= */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCTCtDYLEh4scnKTaD4DNkltwtKekC8HfY",
-  authDomain: "design-craft-studio.firebaseapp.com",
-  projectId: "design-craft-studio",
-  storageBucket: "design-craft-studio.firebasestorage.app",
-  messagingSenderId: "894884224993",
-  appId: "1:894884224993:web:53c5fd30e8f72ba4b6fca0",
-  measurementId: "G-X3Y0J4RFL2"
+  apiKey: "ISI_API_KEY_ANDA",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  storageBucket: "ISI_PROJECT_ID.appspot.com",
+  messagingSenderId: "ISI_SENDER_ID",
+  appId: "ISI_APP_ID"
 };
 const ADMIN_CODE = "TOMPOKERSAN2026"; // Ganti dengan kode rahasia Anda sendiri
 const EMAIL_DOMAIN = "designcraft.local";
@@ -832,10 +831,19 @@ window.addEventListener('load', () => {
 });
 
 function show(id){
-  // Pakai inline style (bukan class 'hidden') supaya tidak bentrok dengan
-  // class responsif seperti 'lg:flex' yang bisa memaksa elemen tetap tampil di layar lebar.
+  // Hapus/tambah class 'hidden' SEKALIGUS paksa lewat inline style, supaya:
+  // - elemen target benar-benar tampil (class hidden dihapus)
+  // - elemen lain benar-benar sembunyi walau ada class responsif seperti 'lg:flex'
+  //   yang bisa menimpa class 'hidden' di layar lebar.
   ['screen-loading','screen-setup-warning','screen-auth','screen-app','screen-admin'].forEach(s => {
-    document.getElementById(s).style.display = (s === id) ? '' : 'none';
+    const el = document.getElementById(s);
+    if (s === id) {
+      el.classList.remove('hidden');
+      el.style.display = '';
+    } else {
+      el.classList.add('hidden');
+      el.style.display = 'none';
+    }
   });
 }
 
