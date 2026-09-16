@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DesignCraft Studio - Belajar Desain Grafis</title>
 
+<!-- Google Analytics: melacak jumlah & aktivitas pengunjung web ini -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X3Y0J4RFL2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-X3Y0J4RFL2');
+</script>
+
 <!--
   ====================================================================
   CARA SETUP (WAJIB dibaca sebelum dipakai):
@@ -781,10 +790,10 @@
         <div>
           <span class="text-xs bg-white/10 px-3 py-1 rounded-full font-semibold">Uji Pengetahuan</span>
           <h2 class="text-2xl font-heading font-bold mt-1">Tantangan Kejelian Desainer</h2>
-          <p class="text-white/50 text-xs sm:text-sm">Uji kejelianmu mengenali kesalahan desain dan dapatkan XP.</p>
+          <p class="text-white/50 text-xs sm:text-sm">10 tantangan mengasah kejelianmu mengenali desain yang tepat. Dapatkan XP di tiap tantangan.</p>
         </div>
         <div class="bg-white/5 px-6 py-3 rounded-2xl border border-white/10 text-center shrink-0">
-          <span class="text-2xl font-bold block" id="challenge-score-display">0/1</span>
+          <span class="text-2xl font-bold block" id="challenge-score-display">0/10</span>
           <span class="text-[10px] uppercase font-bold text-white/40">Tantangan Selesai</span>
         </div>
       </div>
@@ -792,20 +801,13 @@
       <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <h3 class="font-heading font-bold text-ink text-lg flex items-center gap-2"><i class="fa-solid fa-magnifying-glass text-signal-500"></i> Mini-Game: Kejelian Mata Desainer</h3>
-          <span class="text-xs text-signal-700 font-semibold bg-signal-50 px-2.5 py-1 rounded-full">+50 XP</span>
-        </div>
-        <p class="text-xs text-ink/60">Dua opsi desain poster event di bawah ini. Manakah yang punya <strong>hirarki visual &amp; keterbacaan (kontras)</strong> yang tepat?</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          <div onclick="checkChallengeAnswer('A')" class="border-2 border-ink/10 hover:border-signal-400 rounded-2xl p-6 bg-ink text-white/40 cursor-pointer transition-all space-y-3 text-center relative group">
-            <span class="absolute top-3 left-3 bg-white/10 text-white/60 text-xs px-2.5 py-1 rounded-lg font-bold">Opsi A</span>
-            <div class="pt-4"><h4 class="text-white/50 text-base font-normal uppercase">LOMBA DESAIN GRAFIS PEMULA 2026</h4><p class="text-xs text-white/40 mt-2">Daftar sekarang, dapatkan hadiah menarik!</p><button class="mt-4 bg-white/10 text-white/40 text-xs px-3 py-1 rounded">Klik Sini</button></div>
-          </div>
-          <div onclick="checkChallengeAnswer('B')" class="border-2 border-ink/10 hover:border-signal-400 rounded-2xl p-6 bg-ink text-white cursor-pointer transition-all space-y-3 text-center relative group">
-            <span class="absolute top-3 left-3 bg-signal-500 text-white text-xs px-2.5 py-1 rounded-lg font-bold">Opsi B</span>
-            <div class="pt-4"><span class="text-[10px] font-bold text-signal-400 uppercase tracking-widest bg-signal-400/10 px-2.5 py-1 rounded">Event Resmi</span><h4 class="text-2xl font-bold text-white mt-2">LOMBA DESAIN GRAFIS</h4><p class="text-xs text-white/60 mt-2 max-w-xs mx-auto">Tunjukkan bakat visualmu, menangkan hadiah menarik!</p><button class="mt-4 bg-signal-500 group-hover:bg-signal-600 text-white text-xs font-bold px-4 py-2 rounded-lg transition-transform group-hover:scale-105">Daftar Sekarang &rarr;</button></div>
+          <div class="flex items-center gap-2">
+            <button onclick="goToChallenge(currentChallengeIndex - 1)" class="w-8 h-8 rounded-lg bg-paper hover:bg-ink/10 text-ink/50 flex items-center justify-center"><i class="fa-solid fa-chevron-left"></i></button>
+            <span id="challenge-position-lbl" class="text-xs font-bold text-ink/50 w-24 text-center">Soal 1 dari 10</span>
+            <button onclick="goToChallenge(currentChallengeIndex + 1)" class="w-8 h-8 rounded-lg bg-paper hover:bg-ink/10 text-ink/50 flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
-        <div id="challenge-feedback" class="hidden p-4 rounded-xl text-xs font-medium border"></div>
+        <div id="challenge-stage"></div>
       </div>
     </section>
 
@@ -816,7 +818,13 @@
         <button onclick="switchTab('studio')" class="bg-signal-500 hover:bg-signal-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">+ Buat Desain Baru</button>
       </div>
       <div class="bg-white border border-ink/10 rounded-2xl p-6 space-y-4">
-        <h3 class="font-bold text-sm text-ink uppercase tracking-wider">Karya Tersimpan</h3>
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h3 class="font-bold text-sm text-ink uppercase tracking-wider">Karya Tersimpan</h3>
+          <div id="gallery-bulk-bar" class="hidden items-center gap-2">
+            <span id="gallery-selected-count" class="text-xs font-semibold text-ink/50">0 dipilih</span>
+            <button onclick="deleteSelectedGalleryItems()" class="text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-trash-can"></i> Hapus yang Dipilih</button>
+          </div>
+        </div>
         <div id="saved-gallery-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="text-center py-12 text-ink/30 col-span-full border-2 border-dashed border-ink/10 rounded-xl"><i class="fa-solid fa-images text-3xl mb-2 block"></i><p class="text-xs">Belum ada karya. Buka <strong>Studio Desain</strong> dan simpan karya pertamamu!</p></div>
         </div>
@@ -886,13 +894,12 @@
 <script>
 /* ================= FIREBASE CONFIG — GANTI DENGAN MILIK ANDA ================= */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCTCtDYLEh4scnKTaD4DNkltwtKekC8HfY",
-  authDomain: "design-craft-studio.firebaseapp.com",
-  projectId: "design-craft-studio",
-  storageBucket: "design-craft-studio.firebasestorage.app",
-  messagingSenderId: "894884224993",
-  appId: "1:894884224993:web:53c5fd30e8f72ba4b6fca0",
-  measurementId: "G-X3Y0J4RFL2"
+  apiKey: "ISI_API_KEY_ANDA",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  storageBucket: "ISI_PROJECT_ID.appspot.com",
+  messagingSenderId: "ISI_SENDER_ID",
+  appId: "ISI_APP_ID"
 };
 const ADMIN_CODE = "TOMPOKERSAN2026"; // Ganti dengan kode rahasia Anda sendiri
 const EMAIL_DOMAIN = "designcraft.local";
@@ -1126,6 +1133,8 @@ function initStudentApp(){
   setBrandConsistency(true);
   renderCanvas();
   loadTemplate('poster');
+  const firstUnanswered = CHALLENGE_BANK.findIndex(c => !currentUserData.challengeAnswers.some(a => a.id === c.id));
+  goToChallenge(firstUnanswered === -1 ? 0 : firstUnanswered);
   switchTab('dashboard');
 }
 
@@ -1186,7 +1195,8 @@ function renderQuizForModule(m){
   const isCompleted = currentUserData.completedModules.includes(m);
   const totalPossibleXp = questions.reduce((s, q) => s + q.xp, 0);
 
-  let html = '<div class="flex items-center justify-between flex-wrap gap-2 mb-3"><h3 class="font-bold text-ink text-base flex items-center gap-2"><i class="fa-solid fa-circle-question text-signal-500"></i> Kuis Cepat Modul ' + m + '</h3><span class="text-[11px] font-semibold text-ink/40 bg-paper px-2.5 py-1 rounded-full">Total tersedia: ' + totalPossibleXp + ' XP</span></div><div class="space-y-4">';
+  const hasAnyAnswer = answeredForModule.length > 0;
+  let html = '<div class="flex items-center justify-between flex-wrap gap-2 mb-3"><h3 class="font-bold text-ink text-base flex items-center gap-2"><i class="fa-solid fa-circle-question text-signal-500"></i> Kuis Cepat Modul ' + m + '</h3><div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-ink/40 bg-paper px-2.5 py-1 rounded-full">Total tersedia: ' + totalPossibleXp + ' XP</span>' + (hasAnyAnswer ? '<button onclick="resetModuleQuiz(' + m + ')" class="text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-full flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Ulangi dari Awal</button>' : '') + '</div></div><div class="space-y-4">';
 
   questions.forEach((item, qIdx) => {
     const prevAnswer = answeredForModule.find(a => a.qIndex === qIdx);
@@ -1257,29 +1267,134 @@ function completeModule(m){
   saveUserData();
 }
 
-/* ---------------- CHALLENGE MINI-GAME ---------------- */
-function checkChallengeAnswer(option){
-  const feedback = document.getElementById('challenge-feedback');
-  feedback.classList.remove('hidden');
-  const isCorrect = option === 'B';
+function resetModuleQuiz(m){
+  if (!confirm('Ulangi kuis Modul ' + m + ' dari awal? XP yang sudah didapat dari kuis & bonus modul ini akan direset ke 0, lalu kamu bisa menjawab lagi dari soal pertama.')) return;
+  const answers = currentUserData.quizAnswers.filter(a => a.module === m);
+  const xpFromAnswers = answers.reduce((s, a) => s + (a.xpEarned || 0), 0);
+  currentUserData.quizAnswers = currentUserData.quizAnswers.filter(a => a.module !== m);
+  currentUserData.xp -= xpFromAnswers;
+  if (currentUserData.completedModules.includes(m)) {
+    currentUserData.completedModules = currentUserData.completedModules.filter(x => x !== m);
+    currentUserData.xp -= 20;
+  }
+  if (currentUserData.xp < 0) currentUserData.xp = 0;
+  refreshHeaderStats();
+  updateDashboardModuleStatus();
+  renderQuizForModule(m);
+  saveUserData();
+}
 
-  if (isCorrect) {
-    feedback.className = "p-4 rounded-xl text-xs font-medium border bg-emerald-50 border-emerald-200 text-emerald-800";
-    feedback.innerHTML = "<i class='fa-solid fa-circle-check text-emerald-600 mr-1.5'></i> <strong>Benar!</strong> Opsi B punya kontras teks jelas, hirarki visual dengan judul menonjol, dan tombol aksi (CTA) yang menarik.";
-    if (!currentUserData.challengeAnswers.some(c => c.correctAlready)) {
-      currentUserData.xp += 50;
+/* ---------------- CHALLENGE MINI-GAME (10 SOAL) ---------------- */
+let currentChallengeIndex = 0;
+const CHALLENGE_BANK = [
+  { id: 1, xp: 20, correct: 'B',
+    a: '<h4 class="text-white/50 text-base font-normal uppercase">LOMBA DESAIN GRAFIS PEMULA 2026</h4><p class="text-xs text-white/40 mt-2">Daftar sekarang, dapatkan hadiah menarik!</p><button class="mt-4 bg-white/10 text-white/40 text-xs px-3 py-1 rounded">Klik Sini</button>',
+    b: '<span class="text-[10px] font-bold text-signal-400 uppercase tracking-widest bg-signal-400/10 px-2.5 py-1 rounded">Event Resmi</span><h4 class="text-2xl font-bold text-white mt-2">LOMBA DESAIN GRAFIS</h4><p class="text-xs text-white/60 mt-2 max-w-xs mx-auto">Tunjukkan bakat visualmu, menangkan hadiah menarik!</p><button class="mt-4 bg-signal-500 text-white text-xs font-bold px-4 py-2 rounded-lg">Daftar Sekarang &rarr;</button>',
+    q: 'Manakah yang punya hirarki visual & keterbacaan (kontras) yang tepat?',
+    okB: 'Judul menonjol, ada CTA jelas, kontras teks-latar tinggi.', okBad: 'Semua elemen sama besar & pudar, mata bingung mau lihat ke mana.' },
+  { id: 2, xp: 25, correct: 'A',
+    a: '<div class="w-full h-6 bg-blue-500 rounded mb-2"></div><div class="w-full h-6 bg-blue-100 rounded mb-3"></div><span class="bg-signal-500 text-white text-xs font-bold px-4 py-2 rounded-lg">Simpan Perubahan</span>',
+    b: '<div class="w-full h-6 bg-purple-500 rounded mb-2"></div><div class="w-full h-6 bg-emerald-400 rounded mb-3"></div><span class="bg-amber-400 text-white text-xs font-bold px-4 py-2 rounded-lg">Simpan</span>',
+    q: 'Tampilan aplikasi mana yang memakai warna paling konsisten & jelas maknanya?',
+    okB: '1 warna utama + 1 aksen untuk tombol aksi — mudah dipahami.', okBad: 'Warna dipakai acak tanpa pola, tombol aksi jadi tidak menonjol.' },
+  { id: 3, xp: 20, correct: 'B',
+    a: '<h4 class="font-bold text-sm text-white uppercase">TIPS MERAWAT TANAMAN HIAS</h4><p class="text-xs text-white/50" style="line-height:0.85">SIRAM SECUKUPNYA LETAKKAN DI TEMPAT CAHAYA CUKUP BERSIHKAN DAUN DARI DEBU SECARA RUTIN TANPA JEDA SAMA SEKALI</p>',
+    b: '<h4 class="font-bold text-base text-white">Tips Merawat Tanaman Hias</h4><p class="text-xs text-white/60 leading-relaxed mt-2">Siram secukupnya, letakkan di tempat bercahaya cukup, dan bersihkan daun secara rutin.</p>',
+    q: 'Paragraf mana yang lebih nyaman dibaca?',
+    okB: 'Leading (jarak baris) longgar & huruf besar-kecil normal, mata tidak lelah.', okBad: 'Huruf kapital semua & baris rapat — melelahkan mata saat dibaca.' },
+  { id: 4, xp: 25, correct: 'A',
+    a: '<div class="relative h-24 flex items-end justify-start"><div class="w-14 h-14 rounded-xl bg-amber-500 flex items-center justify-center text-white text-xl"><i class="fa-solid fa-mug-hot"></i></div></div>',
+    b: '<div class="relative h-24 flex items-center justify-center"><div class="w-20 h-20 rounded-xl bg-amber-500 flex items-center justify-center text-white text-xl"><i class="fa-solid fa-mug-hot"></i></div></div>',
+    q: 'Komposisi foto produk mana yang lebih dinamis & enak dipandang?',
+    okB: 'Objek diletakkan di titik sepertiga (rule of thirds), ada ruang bernapas.', okBad: 'Objek pas di tengah — terkesan kaku dan monoton.' },
+  { id: 5, xp: 30, correct: 'A',
+    a: '<div class="grid grid-cols-3 gap-2"><div class="bg-rose-500/20 rounded-lg p-2 text-center"><div class="w-6 h-6 mx-auto rounded-full bg-rose-500"></div></div><div class="bg-rose-500/20 rounded-lg p-2 text-center"><i class="fa-solid fa-mug-hot text-rose-400"></i></div><div class="bg-rose-500/20 rounded-lg p-2 text-center"><i class="fa-solid fa-mobile-screen text-rose-400"></i></div></div>',
+    b: '<div class="grid grid-cols-3 gap-2"><div class="bg-blue-500/20 rounded-lg p-2 text-center"><div class="w-6 h-6 mx-auto rounded-full bg-blue-500"></div></div><div class="bg-emerald-500/20 rounded-lg p-2 text-center"><i class="fa-solid fa-mug-hot text-emerald-400"></i></div><div class="bg-amber-500/20 rounded-lg p-2 text-center"><i class="fa-solid fa-mobile-screen text-amber-400"></i></div></div>',
+    q: 'Logo, kemasan, dan profil media sosial mana yang lebih terlihat sebagai satu brand?',
+    okB: 'Warna rose dipakai konsisten di semua media — mudah dikenali.', okBad: 'Warna berbeda di tiap media — audiens sulit mengenali brand yang sama.' },
+  { id: 6, xp: 30, correct: 'B',
+    a: '<p class="text-[9px] font-bold text-white/70 leading-tight">LOMBA DESAIN GRAFIS TAHUN 2026 UNTUK SEMUA SISWA SMA SEDERAJAT SE-JAWA TIMUR PENDAFTARAN GRATIS SEGERA DAFTAR SEBELUM KEHABISAN KUOTA</p><div class="flex flex-wrap gap-1 mt-2"><span class="bg-rose-400 text-white text-[8px] px-1 rounded">SALE</span><span class="bg-blue-400 text-white text-[8px] px-1 rounded">NEW</span><span class="bg-amber-400 text-white text-[8px] px-1 rounded">HOT</span></div>',
+    b: '<div class="flex items-center gap-2 mb-2"><div class="w-5 h-5 rounded-full bg-tealc-500"></div><span class="text-[9px] font-bold text-white/60">@sekolah.kreatif</span></div><h4 class="font-bold text-sm text-white">Lomba Desain Grafis</h4><p class="text-[10px] text-white/50 mt-1">Daftar via bio, gratis!</p><span class="inline-block bg-tealc-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full mt-2">Daftar Sekarang</span>',
+    q: 'Post media sosial mana yang lebih efektif & aman dari terpotong crop?',
+    okB: 'Satu pesan utama, jauh dari tepi, ada CTA jelas.', okBad: 'Teks kepanjangan mepet tepi & terlalu banyak stiker — bikin bingung.' },
+  { id: 7, xp: 20, correct: 'B',
+    a: '<div class="bg-slate-800 rounded-lg p-4"><p class="text-slate-700 font-bold text-sm">Info Penting Untukmu</p></div>',
+    b: '<div class="bg-slate-800 rounded-lg p-4"><p class="text-white font-bold text-sm">Info Penting Untukmu</p></div>',
+    q: 'Kartu mana yang tulisannya lebih mudah terbaca?',
+    okB: 'Kontras teks-putih di atas latar gelap tinggi, mudah terbaca.', okBad: 'Warna teks nyaris sama dengan latar (kontras sangat rendah).' },
+  { id: 8, xp: 25, correct: 'A',
+    a: '<div class="grid grid-cols-3 gap-2"><div class="h-6 bg-white/10 rounded"></div><div class="h-6 bg-white/10 rounded"></div><div class="h-6 bg-white/10 rounded"></div><div class="h-6 bg-white/10 rounded"></div><div class="h-6 bg-white/10 rounded"></div><div class="h-6 bg-white/10 rounded"></div></div>',
+    b: '<div class="relative h-20"><div class="absolute left-1 top-0 h-5 w-10 bg-white/10 rounded"></div><div class="absolute left-16 top-3 h-5 w-8 bg-white/10 rounded"></div><div class="absolute left-6 top-10 h-5 w-12 bg-white/10 rounded"></div><div class="absolute left-24 top-14 h-5 w-6 bg-white/10 rounded"></div></div>',
+    q: 'Susunan elemen mana yang lebih rapi & terstruktur?',
+    okB: 'Elemen sejajar mengikuti grid — rapi dan mudah dipindai mata.', okBad: 'Elemen tersebar acak tanpa garis bantu — terlihat berantakan.' },
+  { id: 9, xp: 25, correct: 'A',
+    a: '<h4 class="font-heading font-bold text-white text-lg">Judul Artikel Menarik</h4><p class="text-xs text-white/60 mt-1">Isi paragraf memakai font sans-serif yang sama, hanya beda ketebalan.</p>',
+    b: '<h4 class="font-heading font-bold text-white text-lg">Judul Artikel</h4><p class="text-xs mt-1" style="font-family:cursive">Lalu isi paragraf pakai font <b style="font-family:serif">lain</b> yang <i>beda lagi</i> gayanya.</p>',
+    q: 'Perpaduan font mana yang lebih profesional?',
+    okB: 'Konsisten pakai 1-2 keluarga font saja — rapi dan mudah dibaca.', okBad: 'Terlalu banyak jenis font berbeda dalam satu desain — terlihat berantakan.' },
+  { id: 10, xp: 30, correct: 'B',
+    a: '<div class="grid grid-cols-4 gap-2"><i class="fa-solid fa-camera text-blue-400"></i><i class="fa-regular fa-star text-amber-400"></i><i class="fa-solid fa-heart text-rose-400"></i><i class="fa-brands fa-github text-emerald-400"></i></div>',
+    b: '<div class="grid grid-cols-4 gap-2"><i class="fa-solid fa-camera text-tealc-400"></i><i class="fa-solid fa-star text-tealc-400"></i><i class="fa-solid fa-heart text-tealc-400"></i><i class="fa-solid fa-bolt text-tealc-400"></i></div>',
+    q: 'Set ikon mana yang lebih konsisten untuk satu brand?',
+    okB: 'Gaya (solid) & warna semua ikon seragam — terlihat rapi satu keluarga.', okBad: 'Gaya ikon campur-campur (solid, outline, brand) & warna beda-beda.' }
+];
+
+function goToChallenge(index){
+  if (index < 0) index = 0;
+  if (index > CHALLENGE_BANK.length - 1) index = CHALLENGE_BANK.length - 1;
+  currentChallengeIndex = index;
+  renderChallengeCard();
+}
+
+function renderChallengeCard(){
+  const item = CHALLENGE_BANK[currentChallengeIndex];
+  const stage = document.getElementById('challenge-stage');
+  const prevAnswer = currentUserData.challengeAnswers.find(c => c.id === item.id);
+  document.getElementById('challenge-position-lbl').innerText = 'Soal ' + (currentChallengeIndex + 1) + ' dari ' + CHALLENGE_BANK.length;
+
+  const lockAttr = prevAnswer ? '' : 'onclick="answerChallenge(' + item.id + ',\'A\')"';
+  const lockAttrB = prevAnswer ? '' : 'onclick="answerChallenge(' + item.id + ',\'B\')"';
+  const cursorCls = prevAnswer ? 'cursor-default' : 'cursor-pointer hover:border-signal-400';
+  const ringA = prevAnswer ? (item.correct === 'A' ? 'border-emerald-400' : (prevAnswer.chosen === 'A' ? 'border-rose-400' : 'border-ink/10')) : 'border-ink/10';
+  const ringB = prevAnswer ? (item.correct === 'B' ? 'border-emerald-400' : (prevAnswer.chosen === 'B' ? 'border-rose-400' : 'border-ink/10')) : 'border-ink/10';
+
+  let html = '<div class="flex items-center justify-between flex-wrap gap-2 mb-3"><p class="text-xs text-ink/60 max-w-md">' + item.q + '</p><span class="text-xs text-signal-700 font-semibold bg-signal-50 px-2.5 py-1 rounded-full shrink-0">+' + item.xp + ' XP</span></div>';
+  html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
+  html += '<div ' + lockAttr + ' class="border-2 ' + ringA + ' ' + cursorCls + ' rounded-2xl p-6 bg-ink transition-all space-y-3 text-center relative"><span class="absolute top-3 left-3 bg-white/10 text-white/60 text-xs px-2.5 py-1 rounded-lg font-bold">Opsi A</span><div class="pt-4">' + item.a + '</div></div>';
+  html += '<div ' + lockAttrB + ' class="border-2 ' + ringB + ' ' + cursorCls + ' rounded-2xl p-6 bg-ink transition-all space-y-3 text-center relative"><span class="absolute top-3 left-3 bg-white/10 text-white/60 text-xs px-2.5 py-1 rounded-lg font-bold">Opsi B</span><div class="pt-4">' + item.b + '</div></div>';
+  html += '</div>';
+
+  if (prevAnswer) {
+    html += prevAnswer.isCorrect
+      ? '<div class="mt-4 p-4 rounded-xl text-xs font-medium border bg-emerald-50 border-emerald-200 text-emerald-800"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i><strong>Benar! +' + item.xp + ' XP.</strong> ' + item.okB + '</div>'
+      : '<div class="mt-4 p-4 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800"><i class="fa-solid fa-circle-xmark text-rose-600 mr-1.5"></i><strong>Kurang tepat, 0 XP.</strong> ' + item.okBad + '</div>';
+    if (currentChallengeIndex < CHALLENGE_BANK.length - 1) {
+      html += '<button onclick="goToChallenge(currentChallengeIndex + 1)" class="mt-3 px-5 py-2.5 rounded-xl text-xs font-bold bg-ink text-white hover:bg-ink/90 flex items-center gap-2">Lanjut ke Soal Berikutnya <i class="fa-solid fa-arrow-right"></i></button>';
+    } else {
+      html += '<div class="mt-3 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold flex items-center gap-2"><i class="fa-solid fa-trophy"></i> Semua 10 tantangan selesai! Cek hasilmu di atas.</div>';
     }
-  } else {
-    feedback.className = "p-4 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800";
-    feedback.innerHTML = "<i class='fa-solid fa-circle-xmark text-rose-600 mr-1.5'></i> <strong>Kurang tepat.</strong> Opsi A pakai warna teks gelap di atas background gelap (kontras rendah) sehingga sulit dibaca.";
   }
 
-  const alreadySolved = currentUserData.challengeAnswers.some(c => c.isCorrect);
-  currentUserData.challengeAnswers.push({ chosen: option, isCorrect, at: new Date().toISOString(), correctAlready: alreadySolved });
-  const solvedCount = currentUserData.challengeAnswers.some(c => c.isCorrect) ? 1 : 0;
-  document.getElementById('challenge-score-display').innerText = solvedCount + '/1';
+  stage.innerHTML = html;
+  updateChallengeScoreDisplay();
+}
+
+function answerChallenge(id, chosen){
+  const already = currentUserData.challengeAnswers.find(c => c.id === id);
+  if (already) return;
+  const item = CHALLENGE_BANK.find(c => c.id === id);
+  const isCorrect = chosen === item.correct;
+  const xpEarned = isCorrect ? item.xp : 0;
+  currentUserData.challengeAnswers.push({ id, chosen, isCorrect, xpEarned, at: new Date().toISOString() });
+  if (isCorrect) currentUserData.xp += xpEarned;
   refreshHeaderStats();
+  renderChallengeCard();
   saveUserData();
+}
+
+function updateChallengeScoreDisplay(){
+  const done = currentUserData.challengeAnswers.length;
+  document.getElementById('challenge-score-display').innerText = done + '/' + CHALLENGE_BANK.length;
 }
 
 /* ---------------- HIERARCHY / TYPOGRAPHY / GRID DEMOS ---------------- */
@@ -1746,22 +1861,61 @@ function saveWorkToGallery(title){
   alert('Karya "' + title + '" berhasil disimpan ke Galeri Karya! +30 XP');
 }
 
+let selectedGalleryIds = new Set();
+
 function renderGallery(){
   const grid = document.getElementById('saved-gallery-grid');
   if (!grid) return;
   if (currentUserData.gallery.length === 0) {
     grid.innerHTML = '<div class="text-center py-12 text-ink/30 col-span-full border-2 border-dashed border-ink/10 rounded-xl"><i class="fa-solid fa-images text-3xl mb-2 block"></i><p class="text-xs">Belum ada karya. Buka <strong>Studio Desain</strong> dan simpan karya pertamamu!</p></div>';
+    document.getElementById('gallery-bulk-bar').classList.add('hidden');
     return;
   }
   grid.innerHTML = '';
   currentUserData.gallery.slice().reverse().forEach((item) => {
     const card = document.createElement('div');
-    card.className = 'p-3 bg-paper border border-ink/10 rounded-xl space-y-2';
+    card.className = 'p-3 bg-paper border border-ink/10 rounded-xl space-y-2 relative';
     const previewId = 'prev-' + item.id;
-    card.innerHTML = '<div id="' + previewId + '" class="relative w-full h-32 bg-white rounded-lg overflow-hidden border border-ink/5"></div><h4 class="font-bold text-xs text-ink px-1">' + escapeHtml(item.title) + '</h4><span class="text-[10px] text-ink/40 block px-1">Dibuat pada: ' + item.date + '</span>';
+    card.innerHTML =
+      '<label class="absolute top-4 left-4 z-10 bg-white/90 rounded-md p-1 shadow cursor-pointer"><input type="checkbox" onchange="toggleGallerySelect(\'' + item.id + '\', this.checked)" ' + (selectedGalleryIds.has(item.id) ? 'checked' : '') + ' class="w-4 h-4 accent-signal-500"></label>' +
+      '<button onclick="deleteGalleryItem(\'' + item.id + '\')" title="Hapus karya ini" class="absolute top-4 right-4 z-10 w-7 h-7 bg-white/90 hover:bg-rose-50 text-rose-600 rounded-md shadow flex items-center justify-center"><i class="fa-solid fa-trash-can text-xs"></i></button>' +
+      '<div id="' + previewId + '" class="relative w-full h-32 bg-white rounded-lg overflow-hidden border border-ink/5"></div>' +
+      '<h4 class="font-bold text-xs text-ink px-1">' + escapeHtml(item.title) + '</h4>' +
+      '<span class="text-[10px] text-ink/40 block px-1">Dibuat pada: ' + item.date + '</span>';
     grid.appendChild(card);
     renderMiniCanvas(document.getElementById(previewId), item.elements, item.canvasWidth || 380, item.canvasHeight || 380, item.bgColor || '#ffffff');
   });
+  updateGalleryBulkBar();
+}
+
+function toggleGallerySelect(id, checked){
+  if (checked) selectedGalleryIds.add(id); else selectedGalleryIds.delete(id);
+  updateGalleryBulkBar();
+}
+
+function updateGalleryBulkBar(){
+  const bar = document.getElementById('gallery-bulk-bar');
+  const count = selectedGalleryIds.size;
+  bar.classList.toggle('hidden', count === 0);
+  bar.classList.toggle('flex', count > 0);
+  document.getElementById('gallery-selected-count').innerText = count + ' dipilih';
+}
+
+function deleteGalleryItem(id){
+  if (!confirm('Hapus karya ini? Tindakan ini tidak bisa dibatalkan.')) return;
+  currentUserData.gallery = currentUserData.gallery.filter(w => w.id !== id);
+  selectedGalleryIds.delete(id);
+  renderGallery();
+  saveUserData();
+}
+
+function deleteSelectedGalleryItems(){
+  if (selectedGalleryIds.size === 0) return;
+  if (!confirm('Hapus ' + selectedGalleryIds.size + ' karya yang dipilih? Tindakan ini tidak bisa dibatalkan.')) return;
+  currentUserData.gallery = currentUserData.gallery.filter(w => !selectedGalleryIds.has(w.id));
+  selectedGalleryIds.clear();
+  renderGallery();
+  saveUserData();
 }
 
 function renderMiniCanvas(container, elements, origW, origH, bgColor){
