@@ -24,12 +24,18 @@
   5. Salin object firebaseConfig yang muncul, tempel di FIREBASE_CONFIG di bawah
   6. Ganti ADMIN_CODE di bawah dengan kode rahasia pilihan Anda
   7. Di Firestore > Rules, tempel aturan berikut lalu Publish:
+     (PENTING: aturan ini WAJIB dipasang ulang/diperbarui jika sebelumnya
+     Anda memakai versi lama, supaya Kode Akses siswa tidak bisa dibaca
+     oleh siswa lain — hanya pemilik akun & admin yang bisa membacanya)
 
      rules_version = '2';
      service cloud.firestore {
        match /databases/{database}/documents {
          match /users/{userId} {
-           allow read: if request.auth != null;
+           allow read: if request.auth != null && (
+             request.auth.uid == userId ||
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+           );
            allow write: if request.auth != null && request.auth.uid == userId;
          }
        }
@@ -40,6 +46,11 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<!-- Untuk fitur admin: download laporan Excel & PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -93,6 +104,21 @@
   #colorWheelCanvas{cursor:pointer}
   .fade-in{animation:fadeIn .25s ease-out}
   @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ---- Mode ABK (aksesibilitas untuk anak berkebutuhan khusus) ---- */
+  .abk-simple{display:none}
+  .abk-praktik-banner{display:none}
+  .mode-abk-baca .abk-detail{display:none}
+  .mode-abk-baca .abk-simple{display:block}
+  .mode-abk-visual .abk-detail{display:none}
+  .mode-abk-praktik .abk-detail{display:none}
+  .mode-abk-praktik .abk-praktik-banner{display:flex}
+  .mode-abk-visual{font-size:1.05rem}
+  .abk-toggle-switch{width:42px;height:24px;border-radius:9999px;position:relative;transition:background .2s;cursor:pointer;flex-shrink:0}
+  .abk-toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:9999px;background:#fff;transition:transform .2s}
+  .abk-toggle-switch.on{background:#8B5CF6}
+  .abk-toggle-switch.on::after{transform:translateX(18px)}
+  .abk-toggle-switch.off{background:#d4d1c9}
 </style>
 </head>
 <body class="bg-paper text-ink font-sans min-h-screen antialiased selection:bg-signal-100">
@@ -168,8 +194,8 @@
             <input required id="login-username" type="text" autocomplete="username" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="cth. rid_desain">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-ink/60 mb-1">Password</label>
-            <input required id="login-password" type="password" autocomplete="current-password" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="••••••••">
+            <label class="block text-xs font-semibold text-ink/60 mb-1">Kode Akses (6 angka)</label>
+            <input required id="login-password" type="text" inputmode="numeric" pattern="[0-9]{6}" autocomplete="current-password" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100 tracking-widest" placeholder="123456">
           </div>
           <button type="submit" id="login-submit-btn" class="w-full bg-ink hover:bg-ink/90 text-white font-semibold py-2.5 rounded-lg text-sm transition-colors mt-2">Masuk ke Studio</button>
         </form>
@@ -185,8 +211,9 @@
             <input required id="reg-username" type="text" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 karakter, huruf/angka/underscore" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="tanpa spasi">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-ink/60 mb-1">Password</label>
-            <input required id="reg-password" type="password" minlength="6" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100" placeholder="Minimal 6 karakter">
+            <label class="block text-xs font-semibold text-ink/60 mb-1">Kode Akses (6 angka)</label>
+            <input required id="reg-password" type="text" inputmode="numeric" pattern="[0-9]{6}" title="Harus 6 digit angka" maxlength="6" class="w-full border border-ink/15 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-signal-500 focus:ring-2 focus:ring-signal-100 tracking-widest" placeholder="Contoh: 482910">
+            <p class="text-[11px] text-ink/40 mt-1">Pakai 6 angka yang mudah diingat. Guru/admin bisa melihat kode ini kalau kamu lupa.</p>
           </div>
 
           <label class="flex items-center gap-2 text-xs font-medium text-ink/60 pt-1 cursor-pointer">
@@ -224,12 +251,18 @@
         <button onclick="switchTab('studio')" id="nav-studio" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-pen-ruler w-4"></i> Studio Desain</button>
         <button onclick="switchTab('challenges')" id="nav-challenges" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-trophy w-4"></i> Tantangan</button>
         <button onclick="switchTab('gallery')" id="nav-gallery" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-images w-4"></i> Galeri Karya</button>
+        <button onclick="openAbkModePanel()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-purple-300 hover:bg-white/5 transition-colors"><i class="fa-solid fa-puzzle-piece w-4"></i> Mode ABK</button>
       </nav>
     </div>
     <div class="space-y-3">
+      <div id="user-level-badge" class="bg-white/5 rounded-xl p-3 text-center">
+        <span class="text-2xl block" id="level-emoji">🌱</span>
+        <span class="text-xs font-bold block mt-0.5" id="level-label">Penjelajah Desain</span>
+        <div class="bar-track mt-2" style="background:rgba(255,255,255,0.1)"><div id="level-progress-bar" class="bar-fill bg-signal-500" style="width:0%"></div></div>
+      </div>
       <div class="bg-white/5 rounded-xl p-3 space-y-2">
         <div class="flex items-center gap-2 text-xs font-semibold"><i class="fa-solid fa-star text-amber-400"></i><span id="user-xp">0 XP</span></div>
-        <div class="flex items-center gap-2 text-xs font-semibold"><i class="fa-solid fa-award text-purple-400"></i><span id="completed-count">0/4 Modul</span></div>
+        <div class="flex items-center gap-2 text-xs font-semibold"><i class="fa-solid fa-award text-purple-400"></i><span id="completed-count">0/6 Modul</span></div>
       </div>
       <div class="flex items-center gap-2 px-1">
         <div class="w-8 h-8 rounded-full bg-signal-500/20 text-signal-400 flex items-center justify-center text-xs font-bold" id="user-avatar">?</div>
@@ -249,6 +282,7 @@
     </div>
     <div class="flex items-center gap-2 text-xs font-semibold">
       <span class="bg-white/10 px-2.5 py-1 rounded-full" id="user-xp-mobile">0 XP</span>
+      <button onclick="openAbkModePanel()" class="w-7 h-7 rounded-full bg-purple-500/20 text-purple-300 flex items-center justify-center"><i class="fa-solid fa-puzzle-piece text-xs"></i></button>
       <button onclick="handleLogout()" class="text-white/50"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
     </div>
   </header>
@@ -334,6 +368,32 @@
           <button onclick="switchTab('studio')" class="shrink-0 w-full sm:w-auto bg-ink hover:bg-ink/90 text-white font-medium px-6 py-3 rounded-xl text-sm transition-colors flex items-center justify-center gap-2"><i class="fa-solid fa-pen-nib text-signal-400"></i> Buka Canvas Editor</button>
         </div>
       </div>
+
+      <div class="bg-white border border-ink/10 rounded-2xl p-6 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <span class="inline-flex items-center gap-1.5 text-xs font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full"><i class="fa-solid fa-gamepad"></i> Mini-Game Seru</span>
+            <h3 class="text-xl font-heading font-bold text-ink mt-2 flex items-center gap-2">Cocokkan Istilah Desain! <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i></h3>
+            <p class="text-xs text-ink/50 mt-1">Seret (drag) atau ketuk istilah di bawah, lalu taruh ke kotak kategori yang tepat. Selesaikan semua untuk bonus XP!</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-ink/50 bg-paper px-3 py-1.5 rounded-full">Tercocokkan: <span id="drag-game-progress">0/12</span></span>
+            <button onclick="resetDragGame()" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1"><i class="fa-solid fa-shuffle"></i> Acak Ulang</button>
+          </div>
+        </div>
+
+        <div id="drag-game-msg" class="hidden text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"></div>
+
+        <div id="drag-pool-wrap" class="flex flex-wrap gap-2 p-4 bg-paper rounded-xl border-2 border-dashed border-ink/10 min-h-[64px]"></div>
+
+        <div id="drag-zones-wrap" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+
+        <div id="drag-game-complete" class="hidden p-4 rounded-xl bg-gradient-to-r from-emerald-50 to-purple-50 border border-emerald-200 flex items-center gap-3 flex-wrap">
+          <div class="w-11 h-11 rounded-full bg-emerald-500 text-white flex items-center justify-center text-lg shrink-0"><i class="fa-solid fa-face-grin-stars"></i></div>
+          <div class="flex-1 min-w-[180px]"><p class="font-bold text-emerald-700 text-sm">Keren, semua istilah tercocokkan! 🎉</p><p class="text-xs text-emerald-600/70">Kamu sudah paham istilah dasar di tiap topik desain grafis.</p></div>
+          <button onclick="resetDragGame()" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700">Main Lagi</button>
+        </div>
+      </div>
     </section>
 
     <!-- TAB: MODULES -->
@@ -350,10 +410,15 @@
       <!-- MODULE 1 -->
       <div id="module-content-1" class="module-body space-y-6">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
-          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">1</span> Elemen Dasar &amp; Hirarki Visual</h2>
-          <p class="text-sm text-ink/60 leading-relaxed">Desain grafis adalah seni menyampaikan pesan secara visual. Untuk membuat desain efektif, kita harus memahami elemen dasar dan bagaimana menyusun hirarki (urutan penting elemen).</p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">1</span> Elemen Dasar &amp; Hirarki Visual</h2>
+            <button onclick="speakModule(1)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
+          </div>
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-1').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Desain grafis adalah seni menyampaikan pesan secara visual. Untuk membuat desain efektif, kita harus memahami elemen dasar dan bagaimana menyusun hirarki (urutan penting elemen).</p>
+          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-blue-50 p-3 rounded-xl">📖 Fokus utama adalah bagian yang paling dulu dilihat mata. Bagian penting dibuat lebih besar & menonjol.</p>
 
-          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
+          <div id="sim-module-1" class="bg-ink rounded-2xl p-6 text-white space-y-4">
             <div class="flex justify-between items-center flex-wrap gap-2">
               <h3 class="font-heading font-bold text-signal-400 flex items-center gap-2 text-base"><i class="fa-solid fa-sliders"></i> Simulator: Kontras &amp; Hirarki</h3>
               <span class="text-xs bg-white/10 text-white/60 px-3 py-1 rounded-full">Geser opsi di bawah</span>
@@ -422,10 +487,15 @@
       <!-- MODULE 2 -->
       <div id="module-content-2" class="module-body hidden space-y-6">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
-          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">2</span> Teori Warna &amp; Roda Warna Interaktif</h2>
-          <p class="text-sm text-ink/60 leading-relaxed">Warna membangkitkan emosi dan mengarahkan perhatian. Kombinasi warna yang tepat memakai formula harmoni seperti <strong>Komplementer</strong>, <strong>Analogis</strong>, dan <strong>Triadik</strong>.</p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">2</span> Teori Warna &amp; Roda Warna Interaktif</h2>
+            <button onclick="speakModule(2)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
+          </div>
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-2').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Warna membangkitkan emosi dan mengarahkan perhatian. Kombinasi warna yang tepat memakai formula harmoni seperti <strong>Komplementer</strong>, <strong>Analogis</strong>, dan <strong>Triadik</strong>.</p>
+          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-purple-50 p-3 rounded-xl">📖 Warna bisa dipasangkan biar serasi. Coba klik roda warna di bawah untuk lihat contohnya!</p>
 
-          <div class="bg-ink rounded-2xl p-6 text-white grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div id="sim-module-2" class="bg-ink rounded-2xl p-6 text-white grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             <div class="lg:col-span-5 flex flex-col items-center justify-center">
               <canvas id="colorWheelCanvas" width="240" height="240" class="rounded-full shadow-lg border-2 border-white/10"></canvas>
               <span class="text-[11px] text-white/40 mt-2">Klik pada roda warna untuk memilih warna utama!</span>
@@ -490,10 +560,15 @@
       <!-- MODULE 3 -->
       <div id="module-content-3" class="module-body hidden space-y-6">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
-          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">3</span> Seni Tipografi</h2>
-          <p class="text-sm text-ink/60 leading-relaxed">Tipografi bukan hanya memilih jenis huruf, tapi mengatur jarak antar karakter (Kerning/Tracking), jarak antar baris (Leading), dan kesesuaian font dengan pesan.</p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">3</span> Seni Tipografi</h2>
+            <button onclick="speakModule(3)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
+          </div>
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-3').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Tipografi bukan hanya memilih jenis huruf, tapi mengatur jarak antar karakter (Kerning/Tracking), jarak antar baris (Leading), dan kesesuaian font dengan pesan.</p>
+          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-emerald-50 p-3 rounded-xl">📖 Huruf yang rapi jaraknya lebih enak dibaca. Coba geser tombol di bawah untuk melihat bedanya!</p>
 
-          <div class="bg-ink rounded-2xl p-6 text-white space-y-6">
+          <div id="sim-module-3" class="bg-ink rounded-2xl p-6 text-white space-y-6">
             <div class="flex justify-between items-center flex-wrap gap-2">
               <h3 class="font-heading font-bold text-emerald-400 flex items-center gap-2 text-base"><i class="fa-solid fa-sliders"></i> Lab Tipografi Interaktif</h3>
               <span class="text-xs bg-white/10 text-white/60 px-3 py-1 rounded-full">Eksperimen parameter huruf</span>
@@ -547,10 +622,15 @@
       <!-- MODULE 4 -->
       <div id="module-content-4" class="module-body hidden space-y-6">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
-          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm">4</span> Tata Letak, Grid &amp; Rule of Thirds</h2>
-          <p class="text-sm text-ink/60 leading-relaxed">Rule of Thirds membimbing mata pemirsa menuju titik fokus alami. Garis grid menjaga elemen tetap rapi dan terstruktur.</p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm">4</span> Tata Letak, Grid &amp; Rule of Thirds</h2>
+            <button onclick="speakModule(4)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
+          </div>
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-4').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Rule of Thirds membimbing mata pemirsa menuju titik fokus alami. Garis grid menjaga elemen tetap rapi dan terstruktur.</p>
+          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-amber-50 p-3 rounded-xl">📖 Bagi gambar jadi 9 kotak. Taruh benda penting di garis potongnya, jangan di tengah-tengah terus.</p>
 
-          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
+          <div id="sim-module-4" class="bg-ink rounded-2xl p-6 text-white space-y-4">
             <div class="flex justify-between items-center">
               <h3 class="font-heading font-bold text-signal-400 flex items-center gap-2 text-base"><i class="fa-solid fa-border-all"></i> Rule of Thirds &amp; Overlay Grid</h3>
               <button onclick="toggleDemoGrid()" class="text-xs bg-signal-500/10 text-signal-300 hover:bg-signal-500/20 px-3 py-1.5 rounded-lg border border-signal-500/30">Toggle Garis Grid</button>
@@ -593,10 +673,15 @@
       <!-- MODULE 5 -->
       <div id="module-content-5" class="module-body hidden space-y-6">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
-          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-sm">5</span> Branding &amp; Identitas Visual</h2>
-          <p class="text-sm text-ink/60 leading-relaxed">Logo adalah wajah sebuah brand. Ada beberapa jenis logo, dan yang tak kalah penting: brand yang kuat harus <strong>konsisten</strong> menjaga warna, font, dan gaya visualnya di semua media.</p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-sm">5</span> Branding &amp; Identitas Visual</h2>
+            <button onclick="speakModule(5)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
+          </div>
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-5').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Logo adalah wajah sebuah brand. Ada beberapa jenis logo, dan yang tak kalah penting: brand yang kuat harus <strong>konsisten</strong> menjaga warna, font, dan gaya visualnya di semua media.</p>
+          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-rose-50 p-3 rounded-xl">📖 Logo adalah wajah sebuah brand/usaha. Pakai warna & gaya yang sama terus supaya orang mudah ingat.</p>
 
-          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
+          <div id="sim-module-5" class="bg-ink rounded-2xl p-6 text-white space-y-4">
             <h3 class="font-heading font-bold text-rose-400 flex items-center gap-2 text-base"><i class="fa-solid fa-shapes"></i> Simulator: Jenis-Jenis Logo</h3>
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               <div class="lg:col-span-5 grid grid-cols-1 gap-2 text-xs">
@@ -643,10 +728,15 @@
       <!-- MODULE 6 -->
       <div id="module-content-6" class="module-body hidden space-y-6">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
-          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-tealc-100 text-tealc-600 flex items-center justify-center text-sm">6</span> Desain untuk Media Sosial</h2>
-          <p class="text-sm text-ink/60 leading-relaxed">Setiap platform punya ukuran &amp; area aman berbeda. Elemen penting (teks, wajah, logo) harus diletakkan jauh dari tepi agar tidak terpotong atau tertutup tombol aplikasi.</p>
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-tealc-100 text-tealc-600 flex items-center justify-center text-sm">6</span> Desain untuk Media Sosial</h2>
+            <button onclick="speakModule(6)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
+          </div>
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-6').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Setiap platform punya ukuran &amp; area aman berbeda. Elemen penting (teks, wajah, logo) harus diletakkan jauh dari tepi agar tidak terpotong atau tertutup tombol aplikasi.</p>
+          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-tealc-50 p-3 rounded-xl">📖 Jangan taruh tulisan penting terlalu dekat tepi gambar, nanti bisa terpotong atau ketutupan tombol.</p>
 
-          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
+          <div id="sim-module-6" class="bg-ink rounded-2xl p-6 text-white space-y-4">
             <div class="flex items-center justify-between flex-wrap gap-2">
               <h3 class="font-heading font-bold text-tealc-400 flex items-center gap-2 text-base"><i class="fa-solid fa-crop-simple"></i> Simulator: Format &amp; Area Aman</h3>
               <div class="flex bg-white/5 rounded-lg p-1 text-xs">
@@ -801,7 +891,8 @@
       <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <h3 class="font-heading font-bold text-ink text-lg flex items-center gap-2"><i class="fa-solid fa-magnifying-glass text-signal-500"></i> Mini-Game: Kejelian Mata Desainer</h3>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="challenge-reset-btn" onclick="resetAllChallenges()" class="hidden text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-2.5 py-1.5 rounded-full items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Ulangi Semua dari Awal</button>
             <button onclick="goToChallenge(currentChallengeIndex - 1)" class="w-8 h-8 rounded-lg bg-paper hover:bg-ink/10 text-ink/50 flex items-center justify-center"><i class="fa-solid fa-chevron-left"></i></button>
             <span id="challenge-position-lbl" class="text-xs font-bold text-ink/50 w-24 text-center">Soal 1 dari 10</span>
             <button onclick="goToChallenge(currentChallengeIndex + 1)" class="w-8 h-8 rounded-lg bg-paper hover:bg-ink/10 text-ink/50 flex items-center justify-center"><i class="fa-solid fa-chevron-right"></i></button>
@@ -840,6 +931,38 @@
     <button onclick="switchTab('challenges')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-trophy text-base"></i>Tantangan</button>
     <button onclick="switchTab('gallery')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-images text-base"></i>Galeri</button>
   </nav>
+
+  <!-- Modal: Mode ABK -->
+  <div id="abk-mode-modal" class="hidden fixed inset-0 bg-ink/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 fade-in max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between">
+        <h3 class="font-heading font-bold text-lg text-ink flex items-center gap-2"><i class="fa-solid fa-puzzle-piece text-purple-500"></i> Mode ABK</h3>
+        <button onclick="closeAbkModePanel()" class="w-8 h-8 rounded-full bg-paper flex items-center justify-center text-ink/50"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p class="text-xs text-ink/50">Nyalakan satu atau beberapa mode di bawah supaya belajar terasa lebih nyaman sesuai kebutuhanmu. Bisa dinyalakan bersamaan.</p>
+
+      <div class="space-y-3">
+        <div class="flex items-center justify-between gap-3 p-3 bg-paper rounded-xl">
+          <div><p class="font-bold text-sm text-ink">📖 Mode Baca</p><p class="text-[11px] text-ink/50">Penjelasan disederhanakan, kalimat lebih pendek.</p></div>
+          <div id="abk-toggle-baca" onclick="toggleAbkMode('baca')" class="abk-toggle-switch off"></div>
+        </div>
+        <div class="flex items-center justify-between gap-3 p-3 bg-paper rounded-xl">
+          <div><p class="font-bold text-sm text-ink">👀 Mode Visual</p><p class="text-[11px] text-ink/50">Lebih banyak gambar/ikon, lebih sedikit teks panjang.</p></div>
+          <div id="abk-toggle-visual" onclick="toggleAbkMode('visual')" class="abk-toggle-switch off"></div>
+        </div>
+        <div class="flex items-center justify-between gap-3 p-3 bg-paper rounded-xl">
+          <div><p class="font-bold text-sm text-ink">🔊 Mode Audio</p><p class="text-[11px] text-ink/50">Materi tiap modul bisa dibacakan otomatis.</p></div>
+          <div id="abk-toggle-audio" onclick="toggleAbkMode('audio')" class="abk-toggle-switch off"></div>
+        </div>
+        <div class="flex items-center justify-between gap-3 p-3 bg-paper rounded-xl">
+          <div><p class="font-bold text-sm text-ink">🎮 Mode Praktik</p><p class="text-[11px] text-ink/50">Langsung lompat ke aktivitas interaktif, kurangi teori.</p></div>
+          <div id="abk-toggle-praktik" onclick="toggleAbkMode('praktik')" class="abk-toggle-switch off"></div>
+        </div>
+      </div>
+
+      <button onclick="closeAbkModePanel()" class="w-full py-2.5 rounded-xl text-sm font-bold bg-ink text-white hover:bg-ink/90">Selesai</button>
+    </div>
+  </div>
 </div>
 
 <!-- ============================================================ -->
@@ -862,15 +985,32 @@
       <div class="bg-white border border-ink/10 rounded-2xl p-5"><span class="text-xs text-ink/40 font-semibold">Total Karya Tersimpan</span><p class="text-2xl font-heading font-bold text-signal-600 mt-1" id="stat-total-works">0</p></div>
     </div>
 
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+      <i class="fa-solid fa-circle-info text-amber-600 mt-0.5"></i>
+      <p class="text-xs text-amber-800 leading-relaxed"><strong>Lupa Kode Akses?</strong> Kode Akses 6 digit siswa bisa dilihat langsung di kolom "Kode Akses" pada tabel di bawah (hanya terlihat oleh admin). Kalau kolomnya kosong ("—"), artinya akun itu didaftarkan sebelum fitur ini aktif — untuk kasus itu, reset lewat <strong>console.firebase.google.com</strong> → project Anda → <strong>Authentication → Users</strong> → cari <code class="bg-white px-1 rounded">username@designcraft.local</code> → <strong>Reset password</strong>.</p>
+    </div>
+
     <div class="bg-white border border-ink/10 rounded-2xl overflow-hidden">
       <div class="p-4 sm:p-5 border-b border-ink/10 flex items-center justify-between flex-wrap gap-2">
         <h3 class="font-heading font-bold text-ink">Daftar Siswa</h3>
-        <input id="admin-search" oninput="renderStudentsTable()" type="text" placeholder="Cari nama/username..." class="text-xs border border-ink/10 rounded-lg px-3 py-2 outline-none focus:border-signal-500 w-48">
+        <div class="flex items-center gap-2 flex-wrap">
+          <input id="admin-search" oninput="renderStudentsTable()" type="text" placeholder="Cari nama/username..." class="text-xs border border-ink/10 rounded-lg px-3 py-2 outline-none focus:border-signal-500 w-40 sm:w-48">
+          <button onclick="exportStudentsExcel()" class="text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-3 py-2 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-file-excel"></i> Excel</button>
+          <button onclick="exportStudentsPDF()" class="text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-2 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-xs sm:text-sm">
           <thead><tr class="text-left text-ink/40 border-b border-ink/10">
-            <th class="p-3 font-semibold">Nama</th><th class="p-3 font-semibold">Username</th><th class="p-3 font-semibold">XP</th><th class="p-3 font-semibold">Modul Selesai</th><th class="p-3 font-semibold">Pemahaman</th><th class="p-3 font-semibold">Karya</th><th class="p-3 font-semibold"></th>
+            <th class="p-3 font-semibold cursor-pointer select-none hover:text-ink" onclick="setSortField('name')">Nama <span id="sort-ic-name"></span></th>
+            <th class="p-3 font-semibold cursor-pointer select-none hover:text-ink" onclick="setSortField('username')">Username <span id="sort-ic-username"></span></th>
+            <th class="p-3 font-semibold">Kode Akses</th>
+            <th class="p-3 font-semibold cursor-pointer select-none hover:text-ink" onclick="setSortField('xp')">XP <span id="sort-ic-xp"></span></th>
+            <th class="p-3 font-semibold">Level</th>
+            <th class="p-3 font-semibold cursor-pointer select-none hover:text-ink" onclick="setSortField('modules')">Modul Selesai <span id="sort-ic-modules"></span></th>
+            <th class="p-3 font-semibold cursor-pointer select-none hover:text-ink" onclick="setSortField('understanding')">Pemahaman <span id="sort-ic-understanding"></span></th>
+            <th class="p-3 font-semibold cursor-pointer select-none hover:text-ink" onclick="setSortField('gallery')">Karya <span id="sort-ic-gallery"></span></th>
+            <th class="p-3 font-semibold"></th>
           </tr></thead>
           <tbody id="admin-students-tbody"></tbody>
         </table>
@@ -894,13 +1034,12 @@
 <script>
 /* ================= FIREBASE CONFIG — GANTI DENGAN MILIK ANDA ================= */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCTCtDYLEh4scnKTaD4DNkltwtKekC8HfY",
-  authDomain: "design-craft-studio.firebaseapp.com",
-  projectId: "design-craft-studio",
-  storageBucket: "design-craft-studio.firebasestorage.app",
-  messagingSenderId: "894884224993",
-  appId: "1:894884224993:web:53c5fd30e8f72ba4b6fca0",
-  measurementId: "G-X3Y0J4RFL2"
+  apiKey: "ISI_API_KEY_ANDA",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  storageBucket: "ISI_PROJECT_ID.appspot.com",
+  messagingSenderId: "ISI_SENDER_ID",
+  appId: "ISI_APP_ID"
 };
 const ADMIN_CODE = "TOMPOKERSAN2026"; // Ganti dengan kode rahasia Anda sendiri
 const EMAIL_DOMAIN = "designcraft.local";
@@ -947,7 +1086,30 @@ const QUIZ_BANK = {
 const MODULE_NAMES = { 1: "Elemen & Hirarki", 2: "Teori Warna", 3: "Tipografi", 4: "Layout & Grid", 5: "Branding & Logo", 6: "Desain Media Sosial" };
 
 function defaultUserData(){
-  return { xp: 0, completedModules: [], quizAnswers: [], challengeAnswers: [], gallery: [] };
+  return { xp: 0, completedModules: [], quizAnswers: [], challengeAnswers: [], gallery: [], dragGameDone: false, abkMode: { baca: false, visual: false, audio: false, praktik: false } };
+}
+
+const LEVELS = [
+  { min: 0, emoji: '🌱', label: 'Penjelajah Desain' },
+  { min: 100, emoji: '🎨', label: 'Peracik Warna' },
+  { min: 250, emoji: '✏️', label: 'Ahli Tipografi' },
+  { min: 400, emoji: '🧩', label: 'Penyusun Komposisi' },
+  { min: 550, emoji: '🏆', label: 'Desainer Muda' }
+];
+
+function getLevelInfo(xp){
+  let current = LEVELS[0], idx = 0;
+  for (let i = 0; i < LEVELS.length; i++) { if (xp >= LEVELS[i].min) { current = LEVELS[i]; idx = i; } }
+  const next = LEVELS[idx + 1];
+  const progressPct = next ? Math.min(100, Math.round(((xp - current.min) / (next.min - current.min)) * 100)) : 100;
+  return { emoji: current.emoji, label: current.label, next, progressPct };
+}
+
+function updateLevelBadge(){
+  const info = getLevelInfo(currentUserData.xp);
+  document.getElementById('level-emoji').innerText = info.emoji;
+  document.getElementById('level-label').innerText = info.label;
+  document.getElementById('level-progress-bar').style.width = info.progressPct + '%';
 }
 
 /* ---------------- INIT ---------------- */
@@ -1039,6 +1201,10 @@ async function handleRegister(e){
   const isAdmin = document.getElementById('reg-is-admin').checked;
   const adminCode = document.getElementById('reg-admin-code').value;
 
+  if (!/^[0-9]{6}$/.test(password)) {
+    showAuthError('Kode Akses harus tepat 6 digit angka.');
+    return;
+  }
   if (isAdmin && adminCode !== ADMIN_CODE) {
     showAuthError('Kode admin salah.');
     return;
@@ -1050,7 +1216,7 @@ async function handleRegister(e){
     const cred = await auth.createUserWithEmailAndPassword(usernameToEmail(username), password);
     const uid = cred.user.uid;
     const profile = {
-      name, username, role: isAdmin ? 'admin' : 'siswa',
+      name, username, role: isAdmin ? 'admin' : 'siswa', accessCode: password,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
       ...defaultUserData()
@@ -1066,8 +1232,8 @@ async function handleRegister(e){
 function friendlyAuthError(err){
   const code = err && err.code;
   if (code === 'auth/email-already-in-use') return 'Username sudah dipakai, coba username lain.';
-  if (code === 'auth/wrong-password' || code === 'auth/user-not-found' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials') return 'Username atau password salah.';
-  if (code === 'auth/weak-password') return 'Password minimal 6 karakter.';
+  if (code === 'auth/wrong-password' || code === 'auth/user-not-found' || code === 'auth/invalid-credential' || code === 'auth/invalid-login-credentials') return 'Username atau Kode Akses salah.';
+  if (code === 'auth/weak-password') return 'Kode Akses harus 6 digit angka.';
   if (code === 'auth/invalid-email') return 'Format username tidak valid (gunakan huruf/angka saja).';
   return 'Terjadi kesalahan. Coba lagi.';
 }
@@ -1087,7 +1253,9 @@ async function loadCurrentUser(uid){
     completedModules: data.completedModules || [],
     quizAnswers: data.quizAnswers || [],
     challengeAnswers: data.challengeAnswers || [],
-    gallery: data.gallery || []
+    gallery: data.gallery || [],
+    dragGameDone: data.dragGameDone || false,
+    abkMode: Object.assign({ baca: false, visual: false, audio: false, praktik: false }, data.abkMode || {})
   });
 
   if (currentUser.role === 'admin') {
@@ -1113,6 +1281,8 @@ function saveUserData(){
       quizAnswers: currentUserData.quizAnswers,
       challengeAnswers: currentUserData.challengeAnswers,
       gallery: currentUserData.gallery,
+      dragGameDone: currentUserData.dragGameDone,
+      abkMode: currentUserData.abkMode,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true }).catch(err => console.error('Gagal menyimpan:', err));
   }, 400);
@@ -1134,6 +1304,8 @@ function initStudentApp(){
   setBrandConsistency(true);
   renderCanvas();
   loadTemplate('poster');
+  initDragGame();
+  applyAbkModeClasses();
   const firstUnanswered = CHALLENGE_BANK.findIndex(c => !currentUserData.challengeAnswers.some(a => a.id === c.id));
   goToChallenge(firstUnanswered === -1 ? 0 : firstUnanswered);
   switchTab('dashboard');
@@ -1143,6 +1315,7 @@ function refreshHeaderStats(){
   document.getElementById('user-xp').innerText = currentUserData.xp + ' XP';
   document.getElementById('user-xp-mobile').innerText = currentUserData.xp + ' XP';
   document.getElementById('completed-count').innerText = currentUserData.completedModules.length + '/6 Modul';
+  updateLevelBadge();
 }
 
 function switchTab(tabName){
@@ -1168,6 +1341,7 @@ function openModule(moduleNum){
   if (activeTabBtn) { activeTabBtn.classList.add('text-signal-600','bg-signal-50'); activeTabBtn.classList.remove('text-ink/60'); }
 
   if (moduleNum === 2) setTimeout(drawColorWheel, 100);
+  if (currentUserData && currentUserData.abkMode && currentUserData.abkMode.audio) speakModule(moduleNum);
 }
 
 function updateDashboardModuleStatus(){
@@ -1396,6 +1570,23 @@ function answerChallenge(id, chosen){
 function updateChallengeScoreDisplay(){
   const done = currentUserData.challengeAnswers.length;
   document.getElementById('challenge-score-display').innerText = done + '/' + CHALLENGE_BANK.length;
+  const resetBtn = document.getElementById('challenge-reset-btn');
+  if (resetBtn) {
+    resetBtn.classList.toggle('hidden', done === 0);
+    resetBtn.classList.toggle('flex', done > 0);
+  }
+}
+
+function resetAllChallenges(){
+  if (currentUserData.challengeAnswers.length === 0) return;
+  if (!confirm('Ulangi semua 10 Tantangan dari awal? XP yang sudah didapat dari Tantangan akan direset ke 0, lalu kamu bisa menjawab lagi dari soal pertama.')) return;
+  const xpFromChallenges = currentUserData.challengeAnswers.reduce((s, a) => s + (a.xpEarned || 0), 0);
+  currentUserData.xp -= xpFromChallenges;
+  if (currentUserData.xp < 0) currentUserData.xp = 0;
+  currentUserData.challengeAnswers = [];
+  refreshHeaderStats();
+  goToChallenge(0);
+  saveUserData();
 }
 
 /* ---------------- HIERARCHY / TYPOGRAPHY / GRID DEMOS ---------------- */
@@ -1568,6 +1759,172 @@ function setSocialFormat(format){
   } else {
     frame.style.width = '160px'; frame.style.height = '284px';
     note.innerText = 'Story memakai rasio 9:16 (vertikal). Area sekitar 10-15% dari atas & bawah sering tertutup nama akun / tombol balas — jangan taruh info penting di sana.';
+  }
+}
+
+/* ---------------- MODE ABK ---------------- */
+function openAbkModePanel(){
+  document.getElementById('abk-mode-modal').classList.remove('hidden');
+  document.getElementById('abk-mode-modal').classList.add('flex');
+  renderAbkToggles();
+}
+function closeAbkModePanel(){
+  document.getElementById('abk-mode-modal').classList.add('hidden');
+  document.getElementById('abk-mode-modal').classList.remove('flex');
+}
+function renderAbkToggles(){
+  ['baca','visual','audio','praktik'].forEach(key => {
+    const el = document.getElementById('abk-toggle-' + key);
+    if (!el) return;
+    const on = !!currentUserData.abkMode[key];
+    el.classList.toggle('on', on);
+    el.classList.toggle('off', !on);
+  });
+}
+function applyAbkModeClasses(){
+  document.body.classList.toggle('mode-abk-baca', !!currentUserData.abkMode.baca);
+  document.body.classList.toggle('mode-abk-visual', !!currentUserData.abkMode.visual);
+  document.body.classList.toggle('mode-abk-audio', !!currentUserData.abkMode.audio);
+  document.body.classList.toggle('mode-abk-praktik', !!currentUserData.abkMode.praktik);
+}
+function toggleAbkMode(key){
+  currentUserData.abkMode[key] = !currentUserData.abkMode[key];
+  renderAbkToggles();
+  applyAbkModeClasses();
+  saveUserData();
+}
+
+/* Text-to-speech sederhana untuk Mode Audio (pakai Web Speech API bawaan browser) */
+const MODULE_AUDIO_TEXT = {
+  1: 'Elemen dan Hirarki. Fokus utama adalah bagian yang pertama kali dilihat mata. Kontras membuat bagian penting lebih menonjol. Keseimbangan simetris artinya kiri dan kanan sama besar.',
+  2: 'Teori Warna. Warna komplementer saling berseberangan di roda warna. Warna biru sering diartikan sebagai kepercayaan. Warna monokromatik memakai satu warna dengan variasi gelap terang.',
+  3: 'Tipografi. Leading adalah jarak antar baris tulisan. Font serif punya kait di ujung huruf, seperti Times New Roman. Tulisan yang mudah dibaca membuat mata tidak cepat lelah.',
+  4: 'Layout dan Grid. Rule of Thirds membagi gambar menjadi sembilan kotak untuk menentukan titik fokus. Ruang kosong di sekitar elemen disebut negative space.',
+  5: 'Branding dan Logo. Wordmark adalah logo berupa nama brand dengan huruf khas. Warna dan font yang konsisten membuat sebuah brand mudah dikenali.',
+  6: 'Desain untuk Media Sosial. Post feed biasanya berbentuk persegi rasio satu banding satu. Story berbentuk vertikal rasio sembilan banding enam belas. Jauhkan tulisan penting dari tepi gambar.'
+};
+function speakText(text){
+  if (!('speechSynthesis' in window)) { alert('Maaf, browser ini belum mendukung fitur baca suara.'); return; }
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'id-ID';
+  utter.rate = 0.95;
+  window.speechSynthesis.speak(utter);
+}
+function stopSpeaking(){
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+function speakModule(m){
+  speakText(MODULE_AUDIO_TEXT[m] || '');
+}
+
+/* ---------------- MINI-GAME: COCOKKAN ISTILAH DESAIN ---------------- */
+const DRAG_GAME_TERMS = [
+  { term: 'Focal Point', cat: 'hirarki' },
+  { term: 'Kontras', cat: 'hirarki' },
+  { term: 'Komplementer', cat: 'warna' },
+  { term: 'Analogis', cat: 'warna' },
+  { term: 'Kerning', cat: 'tipografi' },
+  { term: 'Leading', cat: 'tipografi' },
+  { term: 'Rule of Thirds', cat: 'layout' },
+  { term: 'Negative Space', cat: 'layout' },
+  { term: 'Wordmark', cat: 'branding' },
+  { term: 'Konsistensi', cat: 'branding' },
+  { term: 'Safe Zone', cat: 'sosial' },
+  { term: 'Rasio 1:1', cat: 'sosial' }
+];
+const DRAG_CATEGORIES = [
+  { key: 'hirarki', label: 'Elemen & Hirarki', icon: 'fa-shapes', color: '#3b82f6' },
+  { key: 'warna', label: 'Warna', icon: 'fa-palette', color: '#a855f7' },
+  { key: 'tipografi', label: 'Tipografi', icon: 'fa-font', color: '#10b981' },
+  { key: 'layout', label: 'Layout & Grid', icon: 'fa-grip', color: '#f59e0b' },
+  { key: 'branding', label: 'Branding', icon: 'fa-gem', color: '#f43f5e' },
+  { key: 'sosial', label: 'Media Sosial', icon: 'fa-mobile-screen', color: '#0EA5A8' }
+];
+let dragGameMatched = new Set();
+let dragGameSelectedTerm = null;
+let dragGamePool = [];
+
+function initDragGame(){
+  dragGameMatched = new Set();
+  dragGameSelectedTerm = null;
+  dragGamePool = DRAG_GAME_TERMS.map(t => t.term).sort(() => Math.random() - 0.5);
+  renderDragGame();
+}
+
+function resetDragGame(){
+  initDragGame();
+}
+
+function renderDragGame(){
+  const zonesWrap = document.getElementById('drag-zones-wrap');
+  if (!zonesWrap) return;
+  zonesWrap.innerHTML = DRAG_CATEGORIES.map(cat => {
+    const itemsInZone = DRAG_GAME_TERMS.filter(t => t.cat === cat.key && dragGameMatched.has(t.term));
+    return '<div ondragover="event.preventDefault()" ondrop="onZoneDrop(event,\'' + cat.key + '\')" onclick="onZoneClick(\'' + cat.key + '\')" class="border-2 border-dashed rounded-xl p-3 min-h-[110px] transition-colors cursor-pointer" style="border-color:' + cat.color + '55">' +
+      '<div class="flex items-center gap-1.5 text-xs font-bold mb-2" style="color:' + cat.color + '"><i class="fa-solid ' + cat.icon + '"></i>' + cat.label + '</div>' +
+      '<div class="flex flex-wrap gap-1.5">' + itemsInZone.map(t => '<span class="text-[10px] font-bold text-white px-2 py-1 rounded-full inline-flex items-center gap-1" style="background:' + cat.color + '">' + t.term + '<i class="fa-solid fa-check"></i></span>').join('') + '</div>' +
+    '</div>';
+  }).join('');
+
+  const poolWrap = document.getElementById('drag-pool-wrap');
+  const remaining = dragGamePool.filter(t => !dragGameMatched.has(t));
+  poolWrap.innerHTML = remaining.map(t =>
+    '<div draggable="true" ondragstart="onTermDragStart(event,\'' + t + '\')" onclick="onTermChipClick(\'' + t + '\')" class="px-3 py-2 rounded-lg border-2 text-xs font-bold cursor-grab select-none transition-colors ' + (dragGameSelectedTerm === t ? 'border-signal-500 bg-signal-50 text-signal-700' : 'border-ink/10 bg-white text-ink/70 hover:border-ink/30') + '">' + t + '</div>'
+  ).join('') || '<p class="text-xs text-ink/30 italic px-1">Semua istilah sudah tercocokkan! Klik "Main Lagi" untuk mengulang.</p>';
+
+  const progressEl = document.getElementById('drag-game-progress');
+  if (progressEl) progressEl.innerText = dragGameMatched.size + '/' + DRAG_GAME_TERMS.length;
+
+  const completeEl = document.getElementById('drag-game-complete');
+  if (dragGameMatched.size === DRAG_GAME_TERMS.length) {
+    completeEl.classList.remove('hidden');
+    if (currentUserData && !currentUserData.dragGameDone) {
+      currentUserData.dragGameDone = true;
+      currentUserData.xp += 25;
+      refreshHeaderStats();
+      saveUserData();
+    }
+  } else {
+    completeEl.classList.add('hidden');
+  }
+}
+
+function onTermDragStart(e, term){
+  e.dataTransfer.setData('text/plain', term);
+  dragGameSelectedTerm = term;
+}
+function onZoneDrop(e, catKey){
+  e.preventDefault();
+  const term = e.dataTransfer.getData('text/plain') || dragGameSelectedTerm;
+  placeTermInZone(term, catKey);
+}
+function onTermChipClick(term){
+  dragGameSelectedTerm = (dragGameSelectedTerm === term) ? null : term;
+  renderDragGame();
+}
+function onZoneClick(catKey){
+  if (!dragGameSelectedTerm) return;
+  placeTermInZone(dragGameSelectedTerm, catKey);
+}
+function placeTermInZone(term, catKey){
+  if (!term) return;
+  const data = DRAG_GAME_TERMS.find(t => t.term === term);
+  if (!data) return;
+  const msg = document.getElementById('drag-game-msg');
+  if (data.cat === catKey) {
+    dragGameMatched.add(term);
+    dragGameSelectedTerm = null;
+    if (msg) msg.classList.add('hidden');
+    renderDragGame();
+  } else {
+    dragGameSelectedTerm = null;
+    if (msg) {
+      msg.textContent = '"' + term + '" belum pas di kategori itu, coba lagi! 🤔';
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 1800);
+    }
+    renderDragGame();
   }
 }
 
@@ -1948,6 +2305,9 @@ function escapeHtml(str){
 }
 
 /* ================= ADMIN DASHBOARD ================= */
+let adminSortField = 'xp';
+let adminSortDir = 'desc';
+
 async function loadAllStudents(){
   const snap = await db.collection('users').where('role', '==', 'siswa').get();
   allStudentsCache = snap.docs.map(d => Object.assign({ uid: d.id }, d.data()));
@@ -1973,10 +2333,45 @@ function renderAdminStats(){
   document.getElementById('stat-total-works').innerText = totalWorks;
 }
 
-function renderStudentsTable(){
-  const tbody = document.getElementById('admin-students-tbody');
+function setSortField(field){
+  if (adminSortField === field) { adminSortDir = (adminSortDir === 'asc') ? 'desc' : 'asc'; }
+  else { adminSortField = field; adminSortDir = (field === 'name' || field === 'username') ? 'asc' : 'desc'; }
+  renderStudentsTable();
+}
+
+function sortValueFor(s, field){
+  if (field === 'name') return (s.name || '').toLowerCase();
+  if (field === 'username') return (s.username || '').toLowerCase();
+  if (field === 'xp') return s.xp || 0;
+  if (field === 'modules') return (s.completedModules || []).length;
+  if (field === 'understanding') return understandingPct(s);
+  if (field === 'gallery') return (s.gallery || []).length;
+  return 0;
+}
+
+function getSortedFilteredStudents(){
   const searchVal = (document.getElementById('admin-search').value || '').toLowerCase();
   const list = allStudentsCache.filter(s => (s.name || '').toLowerCase().includes(searchVal) || (s.username || '').toLowerCase().includes(searchVal));
+  list.sort((a, b) => {
+    const va = sortValueFor(a, adminSortField), vb = sortValueFor(b, adminSortField);
+    let cmp = (typeof va === 'string') ? va.localeCompare(vb) : (va - vb);
+    return adminSortDir === 'asc' ? cmp : -cmp;
+  });
+  return list;
+}
+
+function updateSortIcons(){
+  ['name','username','xp','modules','understanding','gallery'].forEach(f => {
+    const el = document.getElementById('sort-ic-' + f);
+    if (!el) return;
+    el.innerHTML = (f === adminSortField) ? (adminSortDir === 'asc' ? '<i class="fa-solid fa-arrow-up-short-wide"></i>' : '<i class="fa-solid fa-arrow-down-wide-short"></i>') : '';
+  });
+}
+
+function renderStudentsTable(){
+  const tbody = document.getElementById('admin-students-tbody');
+  const list = getSortedFilteredStudents();
+  updateSortIcons();
 
   document.getElementById('admin-empty-state').classList.toggle('hidden', allStudentsCache.length !== 0);
 
@@ -1985,30 +2380,95 @@ function renderStudentsTable(){
   tbody.innerHTML = list.map(s => {
     const pct = understandingPct(s);
     const barColor = pct >= 70 ? '#10b981' : pct >= 40 ? '#f59e0b' : '#f43f5e';
-    return '<tr class="border-b border-ink/5 hover:bg-paper/60 cursor-pointer" onclick="openStudentDetail(\'' + s.uid + '\')">' +
-      '<td class="p-3 font-semibold text-ink">' + escapeHtml(s.name || '-') + '</td>' +
-      '<td class="p-3 text-ink/50">@' + escapeHtml(s.username || '-') + '</td>' +
-      '<td class="p-3 text-ink/70">' + (s.xp || 0) + '</td>' +
-      '<td class="p-3 text-ink/70">' + ((s.completedModules || []).length) + '/4</td>' +
-      '<td class="p-3"><div class="flex items-center gap-2"><div class="bar-track w-20"><div class="bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div><span class="text-ink/50 text-[11px]">' + pct + '%</span></div></td>' +
-      '<td class="p-3 text-ink/70">' + ((s.gallery || []).length) + '</td>' +
-      '<td class="p-3 text-signal-600 text-xs font-semibold">Detail &rarr;</td>' +
+    const lvl = getLevelInfo(s.xp || 0);
+    return '<tr class="border-b border-ink/5 hover:bg-paper/60">' +
+      '<td class="p-3 font-semibold text-ink cursor-pointer" onclick="openStudentDetail(\'' + s.uid + '\')">' + escapeHtml(s.name || '-') + '</td>' +
+      '<td class="p-3 text-ink/50 cursor-pointer" onclick="openStudentDetail(\'' + s.uid + '\')">@' + escapeHtml(s.username || '-') + '</td>' +
+      '<td class="p-3 font-mono text-ink/70">' + (s.accessCode ? '<span class="bg-paper px-2 py-1 rounded tracking-widest">' + escapeHtml(s.accessCode) + '</span>' : '<span class="text-ink/30">&mdash;</span>') + '</td>' +
+      '<td class="p-3 text-ink/70 cursor-pointer" onclick="openStudentDetail(\'' + s.uid + '\')">' + (s.xp || 0) + '</td>' +
+      '<td class="p-3 cursor-pointer" onclick="openStudentDetail(\'' + s.uid + '\')"><span class="text-[11px] font-semibold whitespace-nowrap">' + lvl.emoji + ' ' + lvl.label + '</span></td>' +
+      '<td class="p-3 text-ink/70 cursor-pointer" onclick="openStudentDetail(\'' + s.uid + '\')">' + ((s.completedModules || []).length) + '/6</td>' +
+      '<td class="p-3 cursor-pointer" onclick="openStudentDetail(\'' + s.uid + '\')"><div class="flex items-center gap-2"><div class="bar-track w-20"><div class="bar-fill" style="width:' + pct + '%;background:' + barColor + '"></div></div><span class="text-ink/50 text-[11px]">' + pct + '%</span></div></td>' +
+      '<td class="p-3 text-ink/70 cursor-pointer" onclick="openStudentDetail(\'' + s.uid + '\')">' + ((s.gallery || []).length) + '</td>' +
+      '<td class="p-3"><div class="flex items-center gap-2 justify-end"><button onclick="openStudentDetail(\'' + s.uid + '\')" class="text-signal-600 text-xs font-semibold">Detail</button><button onclick="deleteStudent(\'' + s.uid + '\',\'' + escapeHtml(s.name || s.username || '').replace(/'/g, "\\'") + '\')" title="Hapus data siswa" class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center"><i class="fa-solid fa-trash-can text-xs"></i></button></div></td>' +
     '</tr>';
   }).join('');
+}
+
+async function deleteStudent(uid, label){
+  if (!confirm('Hapus seluruh data & progres "' + label + '" dari DesignCraft Studio?\n\nCatatan: ini menghapus data progres siswa (XP, kuis, karya) dan langsung mengunci akses akun tersebut ke aplikasi. Tindakan ini tidak bisa dibatalkan.')) return;
+  try {
+    await db.collection('users').doc(uid).delete();
+    allStudentsCache = allStudentsCache.filter(s => s.uid !== uid);
+    renderAdminStats();
+    renderStudentsTable();
+  } catch (err) {
+    alert('Gagal menghapus data siswa. Coba lagi.');
+    console.error(err);
+  }
+}
+
+function buildExportRows(){
+  return getSortedFilteredStudents().map(s => {
+    const lvl = getLevelInfo(s.xp || 0);
+    return {
+      'Nama': s.name || '-',
+      'Username': s.username || '-',
+      'Kode Akses': s.accessCode || '-',
+      'XP': s.xp || 0,
+      'Level': lvl.emoji + ' ' + lvl.label,
+      'Modul Selesai': (s.completedModules || []).length + '/6',
+      'Pemahaman (%)': understandingPct(s),
+      'Jumlah Karya': (s.gallery || []).length
+    };
+  });
+}
+
+function exportStudentsExcel(){
+  const rows = buildExportRows();
+  if (rows.length === 0) { alert('Belum ada data siswa untuk diunduh.'); return; }
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{ wch: 22 }, { wch: 18 }, { wch: 12 }, { wch: 8 }, { wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 12 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Data Siswa');
+  XLSX.writeFile(wb, 'DesignCraft-Data-Siswa-' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
+
+function exportStudentsPDF(){
+  const rows = buildExportRows();
+  if (rows.length === 0) { alert('Belum ada data siswa untuk diunduh.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(14);
+  doc.text('Laporan Progres Siswa - DesignCraft Studio', 14, 15);
+  doc.setFontSize(9);
+  doc.setTextColor(120);
+  doc.text('Diunduh pada: ' + new Date().toLocaleString('id-ID'), 14, 21);
+  doc.autoTable({
+    startY: 27,
+    head: [['Nama', 'Username', 'Kode Akses', 'XP', 'Level', 'Modul Selesai', 'Pemahaman', 'Jumlah Karya']],
+    body: rows.map(r => [r['Nama'], r['Username'], r['Kode Akses'], r['XP'], r['Level'], r['Modul Selesai'], r['Pemahaman (%)'] + '%', r['Jumlah Karya']]),
+    styles: { fontSize: 9 },
+    headStyles: { fillColor: [21, 23, 28] }
+  });
+  doc.save('DesignCraft-Data-Siswa-' + new Date().toISOString().slice(0, 10) + '.pdf');
 }
 
 function openStudentDetail(uid){
   const s = allStudentsCache.find(x => x.uid === uid);
   if (!s) return;
   const pct = understandingPct(s);
+  const lvl = getLevelInfo(s.xp || 0);
 
   let html = '';
   html += '<div class="bg-white border border-ink/10 rounded-2xl p-5 space-y-1">';
   html += '<h4 class="font-heading font-bold text-lg text-ink">' + escapeHtml(s.name || '-') + '</h4>';
   html += '<p class="text-xs text-ink/40">@' + escapeHtml(s.username || '-') + '</p>';
+  html += s.accessCode ? '<p class="text-xs text-ink/50 mt-1">Kode Akses: <span class="font-mono font-bold bg-paper px-2 py-0.5 rounded tracking-widest">' + escapeHtml(s.accessCode) + '</span></p>' : '<p class="text-[11px] text-ink/30 mt-1">Kode Akses tidak tersedia (akun lama)</p>';
+  html += '<span class="inline-block mt-2 text-xs font-bold bg-purple-50 text-purple-700 px-3 py-1 rounded-full">' + lvl.emoji + ' ' + lvl.label + '</span>';
   html += '<div class="grid grid-cols-3 gap-3 pt-3 text-center">';
   html += '<div class="bg-paper rounded-xl p-2"><p class="text-lg font-heading font-bold text-ink">' + (s.xp || 0) + '</p><p class="text-[10px] text-ink/40">XP</p></div>';
-  html += '<div class="bg-paper rounded-xl p-2"><p class="text-lg font-heading font-bold text-ink">' + ((s.completedModules || []).length) + '/4</p><p class="text-[10px] text-ink/40">Modul Selesai</p></div>';
+  html += '<div class="bg-paper rounded-xl p-2"><p class="text-lg font-heading font-bold text-ink">' + ((s.completedModules || []).length) + '/6</p><p class="text-[10px] text-ink/40">Modul Selesai</p></div>';
   html += '<div class="bg-paper rounded-xl p-2"><p class="text-lg font-heading font-bold text-tealc-600">' + pct + '%</p><p class="text-[10px] text-ink/40">Pemahaman</p></div>';
   html += '</div></div>';
 
