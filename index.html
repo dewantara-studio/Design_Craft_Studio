@@ -44,6 +44,18 @@
          }
        }
      }
+  8. (Opsional) Mode Bahasa Isyarat: kalau ada guru/pendamping yang bisa
+     BISINDO dan mau merekam video penjelasan tiap Buku, unggah videonya
+     ke YouTube (bisa "Unlisted" biar tidak publik), lalu:
+     - Klik Share > Embed di video tersebut
+     - Salin HANYA bagian src="..." dari kode yang muncul
+     - Tempel ke SIGN_LANGUAGE_VIDEOS di bagian bawah (cari kode ini)
+     Buku yang belum diisi videonya akan otomatis menampilkan pesan
+     "belum tersedia" ke siswa, jadi aman dikosongkan dulu.
+  9. Ejaan Jari (fingerspelling) untuk istilah kunci seperti "Focal Point",
+     "Kontras", nama warna, dll — otomatis memakai video resmi Kamus SIBI
+     dari Kemendikdasmen (pkplk.kemendikdasmen.go.id/sibi), diputar langsung
+     dari server mereka. Tidak perlu diisi/disetel apa pun.
   ====================================================================
 -->
 
@@ -115,6 +127,7 @@
   .abk-active-banner{display:none}
   .mode-abk-baca .abk-active-banner.baca-banner{display:flex}
   .mode-abk-visual .abk-active-banner.visual-banner{display:flex}
+  .mode-abk-isyarat .abk-active-banner.isyarat-banner{display:flex}
   .mode-abk-baca .abk-detail{display:none}
   .mode-abk-baca .abk-simple{display:block}
   .mode-abk-visual .abk-detail{display:none}
@@ -508,12 +521,13 @@
           <!-- HALAMAN 3: Tahukah Kamu -->
           <div class="book-page" data-page="3">
             <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <div id="sign-video-wrap-1" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Desain grafis adalah seni menyampaikan pesan secara visual. Untuk membuat desain efektif, kita harus memahami elemen dasar dan bagaimana menyusun hirarki (urutan penting elemen).</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-blue-50 p-3 rounded-xl">📖 Fokus utama adalah bagian yang paling dulu dilihat mata. Bagian penting dibuat lebih besar & menonjol.</p>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3">
-              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-eye text-blue-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Focal Point</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Elemen pertama yang dilihat mata saat menatap desain.</p></div>
-              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-circle-half-stroke text-purple-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Kontras Visual</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Perbedaan ukuran/warna untuk memisahkan info penting.</p></div>
-              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-scale-balanced text-emerald-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Keseimbangan</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Simetris (seimbang) atau asimetris (dinamis).</p></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-eye text-blue-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Focal Point</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Elemen pertama yang dilihat mata saat menatap desain.</p><div class="sign-term-slot hidden" data-sign-term="Focal Point"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-circle-half-stroke text-purple-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Kontras Visual</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Perbedaan ukuran/warna untuk memisahkan info penting.</p><div class="sign-term-slot hidden" data-sign-term="Kontras"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-scale-balanced text-emerald-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Keseimbangan</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Simetris (seimbang) atau asimetris (dinamis).</p><div class="sign-term-slot hidden" data-sign-term="Keseimbangan"></div></div>
             </div>
           </div>
 
@@ -561,6 +575,7 @@
 
           <!-- HALAMAN 6: Uji Dirimu -->
           <div class="book-page" data-page="6">
+            <div class="abk-active-banner isyarat-banner items-center gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-semibold text-indigo-700 mb-3"><span>🤟 Mode Bahasa Isyarat aktif — kalau ada soal yang belum jelas, minta bantuan guru/pendamping untuk membacakannya dalam bahasa isyarat.</span></div>
             <div id="quiz-wrap-1"></div>
           </div>
 
@@ -646,15 +661,16 @@
           <!-- HALAMAN 3: Tahukah Kamu -->
           <div class="book-page" data-page="3">
             <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <div id="sign-video-wrap-2" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Warna membangkitkan emosi dan mengarahkan perhatian. Kombinasi warna yang tepat memakai formula harmoni seperti <strong>Komplementer</strong>, <strong>Analogis</strong>, dan <strong>Triadik</strong>.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-purple-50 p-3 rounded-xl">📖 Warna bisa dipasangkan biar serasi. Coba klik roda warna di halaman "Coba" untuk lihat contohnya!</p>
             <div class="pt-3">
               <h4 class="font-bold text-ink text-sm mb-3">Psikologi Warna dalam Brand:</h4>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                <div class="p-3 bg-red-50 border border-red-200 rounded-xl"><div class="font-bold text-red-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 card-dot-visual"></span>Merah</div><p class="text-ink/60 card-detail-text">Energi, Keberanian, Semangat.</p></div>
-                <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl"><div class="font-bold text-blue-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500 card-dot-visual"></span>Biru</div><p class="text-ink/60 card-detail-text">Kepercayaan, Profesional.</p></div>
-                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl"><div class="font-bold text-emerald-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 card-dot-visual"></span>Hijau</div><p class="text-ink/60 card-detail-text">Kesehatan, Alam, Tumbuh.</p></div>
-                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl"><div class="font-bold text-amber-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 card-dot-visual"></span>Kuning</div><p class="text-ink/60 card-detail-text">Keceriaan, Optimisme.</p></div>
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl"><div class="font-bold text-red-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 card-dot-visual"></span>Merah</div><p class="text-ink/60 card-detail-text">Energi, Keberanian, Semangat.</p><div class="sign-term-slot hidden" data-sign-term="Merah"></div></div>
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl"><div class="font-bold text-blue-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500 card-dot-visual"></span>Biru</div><p class="text-ink/60 card-detail-text">Kepercayaan, Profesional.</p><div class="sign-term-slot hidden" data-sign-term="Biru"></div></div>
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl"><div class="font-bold text-emerald-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 card-dot-visual"></span>Hijau</div><p class="text-ink/60 card-detail-text">Kesehatan, Alam, Tumbuh.</p><div class="sign-term-slot hidden" data-sign-term="Hijau"></div></div>
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl"><div class="font-bold text-amber-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 card-dot-visual"></span>Kuning</div><p class="text-ink/60 card-detail-text">Keceriaan, Optimisme.</p><div class="sign-term-slot hidden" data-sign-term="Kuning"></div></div>
               </div>
             </div>
           </div>
@@ -697,6 +713,7 @@
 
           <!-- HALAMAN 6: Uji Dirimu -->
           <div class="book-page" data-page="6">
+            <div class="abk-active-banner isyarat-banner items-center gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-semibold text-indigo-700 mb-3"><span>🤟 Mode Bahasa Isyarat aktif — kalau ada soal yang belum jelas, minta bantuan guru/pendamping untuk membacakannya dalam bahasa isyarat.</span></div>
             <div id="quiz-wrap-2"></div>
           </div>
 
@@ -776,6 +793,7 @@
           <!-- HALAMAN 3: Tahukah Kamu -->
           <div class="book-page" data-page="3">
             <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <div id="sign-video-wrap-3" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Tipografi bukan hanya memilih jenis huruf, tapi mengatur jarak antar karakter (Kerning/Tracking), jarak antar baris (Leading), dan kesesuaian font dengan pesan.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-emerald-50 p-3 rounded-xl">📖 Huruf yang rapi jaraknya lebih enak dibaca. Coba geser tombol di halaman "Coba" untuk melihat bedanya!</p>
           </div>
@@ -823,6 +841,7 @@
 
           <!-- HALAMAN 6: Uji Dirimu -->
           <div class="book-page" data-page="6">
+            <div class="abk-active-banner isyarat-banner items-center gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-semibold text-indigo-700 mb-3"><span>🤟 Mode Bahasa Isyarat aktif — kalau ada soal yang belum jelas, minta bantuan guru/pendamping untuk membacakannya dalam bahasa isyarat.</span></div>
             <div id="quiz-wrap-3"></div>
           </div>
 
@@ -904,6 +923,7 @@
           <!-- HALAMAN 3: Tahukah Kamu -->
           <div class="book-page" data-page="3">
             <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <div id="sign-video-wrap-4" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Rule of Thirds membimbing mata pemirsa menuju titik fokus alami. Garis grid menjaga elemen tetap rapi dan terstruktur.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-amber-50 p-3 rounded-xl">📖 Bagi gambar jadi 9 kotak. Taruh benda penting di garis potongnya, jangan di tengah-tengah terus.</p>
           </div>
@@ -938,6 +958,7 @@
 
           <!-- HALAMAN 6: Uji Dirimu -->
           <div class="book-page" data-page="6">
+            <div class="abk-active-banner isyarat-banner items-center gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-semibold text-indigo-700 mb-3"><span>🤟 Mode Bahasa Isyarat aktif — kalau ada soal yang belum jelas, minta bantuan guru/pendamping untuk membacakannya dalam bahasa isyarat.</span></div>
             <div id="quiz-wrap-4"></div>
           </div>
 
@@ -1011,6 +1032,7 @@
           <!-- HALAMAN 3: Tahukah Kamu -->
           <div class="book-page" data-page="3">
             <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <div id="sign-video-wrap-5" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Logo adalah wajah sebuah brand. Ada beberapa jenis logo, dan yang tak kalah penting: brand yang kuat harus <strong>konsisten</strong> menjaga warna, font, dan gaya visualnya di semua media.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-rose-50 p-3 rounded-xl">📖 Logo adalah wajah sebuah brand/usaha. Pakai warna & gaya yang sama terus supaya orang mudah ingat.</p>
           </div>
@@ -1057,6 +1079,7 @@
 
           <!-- HALAMAN 6: Uji Dirimu -->
           <div class="book-page" data-page="6">
+            <div class="abk-active-banner isyarat-banner items-center gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-semibold text-indigo-700 mb-3"><span>🤟 Mode Bahasa Isyarat aktif — kalau ada soal yang belum jelas, minta bantuan guru/pendamping untuk membacakannya dalam bahasa isyarat.</span></div>
             <div id="quiz-wrap-5"></div>
           </div>
 
@@ -1148,11 +1171,12 @@
           <!-- HALAMAN 3: Tahukah Kamu -->
           <div class="book-page" data-page="3">
             <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <div id="sign-video-wrap-6" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Setiap platform punya ukuran &amp; area aman berbeda. Elemen penting (teks, wajah, logo) harus diletakkan jauh dari tepi agar tidak terpotong atau tertutup tombol aplikasi.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-tealc-50 p-3 rounded-xl">📖 Jangan taruh tulisan penting terlalu dekat tepi gambar, nanti bisa terpotong atau ketutupan tombol.</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
-              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-images text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Post Feed (1:1 / 4:5)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Dilihat sekilas saat scroll — judul & fokus utama harus langsung terlihat jelas.</p></div>
-              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-mobile-screen-button text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Story (9:16)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Bagian atas & bawah sering tertutup nama akun dan tombol balas — hindari taruh info penting di situ.</p></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-images text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Post Feed (1:1 / 4:5)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Dilihat sekilas saat scroll — judul & fokus utama harus langsung terlihat jelas.</p><div class="sign-term-slot hidden" data-sign-term="Post"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-mobile-screen-button text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Story (9:16)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Bagian atas & bawah sering tertutup nama akun dan tombol balas — hindari taruh info penting di situ.</p><div class="sign-term-slot hidden" data-sign-term="Story"></div></div>
             </div>
           </div>
 
@@ -1191,6 +1215,7 @@
 
           <!-- HALAMAN 6: Uji Dirimu -->
           <div class="book-page" data-page="6">
+            <div class="abk-active-banner isyarat-banner items-center gap-2 p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-semibold text-indigo-700 mb-3"><span>🤟 Mode Bahasa Isyarat aktif — kalau ada soal yang belum jelas, minta bantuan guru/pendamping untuk membacakannya dalam bahasa isyarat.</span></div>
             <div id="quiz-wrap-6"></div>
           </div>
 
@@ -1388,7 +1413,13 @@
           <div><p class="font-bold text-sm text-ink">🎮 Mode Praktik</p><p class="text-[11px] text-ink/50">Langsung lompat ke aktivitas interaktif, kurangi teori.</p></div>
           <div id="abk-toggle-praktik" onclick="toggleAbkMode('praktik')" class="abk-toggle-switch off"></div>
         </div>
+        <div class="flex items-center justify-between gap-3 p-3 bg-paper rounded-xl">
+          <div><p class="font-bold text-sm text-ink">🤟 Mode Bahasa Isyarat</p><p class="text-[11px] text-ink/50">Tampilkan video BISINDO (jika sudah disediakan guru) di halaman materi.</p></div>
+          <div id="abk-toggle-isyarat" onclick="toggleAbkMode('isyarat')" class="abk-toggle-switch off"></div>
+        </div>
       </div>
+
+      <p class="text-[11px] text-ink/35 leading-relaxed">🤟 Catatan: video bahasa isyarat perlu direkam langsung oleh guru/pendamping yang bisa BISINDO — ini bukan animasi otomatis, supaya artinya tetap akurat dan tidak membingungkan.</p>
 
       <button onclick="closeAbkModePanel()" class="w-full py-2.5 rounded-xl text-sm font-bold bg-ink text-white hover:bg-ink/90">Selesai</button>
     </div>
@@ -1464,13 +1495,12 @@
 <script>
 /* ================= FIREBASE CONFIG — GANTI DENGAN MILIK ANDA ================= */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCTCtDYLEh4scnKTaD4DNkltwtKekC8HfY",
-  authDomain: "design-craft-studio.firebaseapp.com",
-  projectId: "design-craft-studio",
-  storageBucket: "design-craft-studio.firebasestorage.app",
-  messagingSenderId: "894884224993",
-  appId: "1:894884224993:web:53c5fd30e8f72ba4b6fca0",
-  measurementId: "G-X3Y0J4RFL2"
+  apiKey: "ISI_API_KEY_ANDA",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  storageBucket: "ISI_PROJECT_ID.appspot.com",
+  messagingSenderId: "ISI_SENDER_ID",
+  appId: "ISI_APP_ID"
 };
 const ADMIN_CODE = "TOMPOKERSAN2026"; // Ganti dengan kode rahasia Anda sendiri
 const EMAIL_DOMAIN = "designcraft.local";
@@ -1517,7 +1547,7 @@ const QUIZ_BANK = {
 const MODULE_NAMES = { 1: "Elemen & Hirarki", 2: "Teori Warna", 3: "Tipografi", 4: "Layout & Grid", 5: "Branding & Logo", 6: "Desain Media Sosial" };
 
 function defaultUserData(){
-  return { xp: 0, completedModules: [], quizAnswers: [], challengeAnswers: [], gallery: [], dragGameDone: false, abkMode: { baca: false, visual: false, audio: false, praktik: false }, lastModule: 0 };
+  return { xp: 0, completedModules: [], quizAnswers: [], challengeAnswers: [], gallery: [], dragGameDone: false, abkMode: { baca: false, visual: false, audio: false, praktik: false, isyarat: false }, lastModule: 0, certificateEarned: false };
 }
 
 const LEVELS = [
@@ -1728,8 +1758,9 @@ async function loadCurrentUser(uid){
     challengeAnswers: data.challengeAnswers || [],
     gallery: data.gallery || [],
     dragGameDone: data.dragGameDone || false,
-    abkMode: Object.assign({ baca: false, visual: false, audio: false, praktik: false }, data.abkMode || {}),
-    lastModule: data.lastModule || 0
+    abkMode: Object.assign({ baca: false, visual: false, audio: false, praktik: false, isyarat: false }, data.abkMode || {}),
+    lastModule: data.lastModule || 0,
+    certificateEarned: data.certificateEarned || false
   });
 
   if (currentUser.role === 'admin') {
@@ -1758,6 +1789,7 @@ function saveUserData(){
       dragGameDone: currentUserData.dragGameDone,
       abkMode: currentUserData.abkMode,
       lastModule: currentUserData.lastModule,
+      certificateEarned: currentUserData.certificateEarned,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true }).catch(err => console.error('Gagal menyimpan:', err));
   }, 400);
@@ -1930,6 +1962,108 @@ function renderQuizForModule(m){
   renderModuleCompletion(m);
 }
 
+/* ---------------- SERTIFIKAT PENYELESAIAN ---------------- */
+const CERT_THRESHOLD = 70; // syarat minimal rata-rata pemahaman (%)
+
+function getOverallUnderstanding(){
+  const answers = currentUserData.quizAnswers || [];
+  if (answers.length === 0) return 0;
+  const correct = answers.filter(a => a.isCorrect).length;
+  return Math.round((correct / answers.length) * 100);
+}
+
+function isEligibleForCertificate(){
+  return currentUserData.completedModules.length === 6 && getOverallUnderstanding() >= CERT_THRESHOLD;
+}
+
+function renderCertificateBlock(){
+  const pct = getOverallUnderstanding();
+  if (pct >= CERT_THRESHOLD) {
+    return '<div class="w-full mt-3 bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-center gap-4 flex-wrap">' +
+      '<div class="w-12 h-12 rounded-full bg-amber-500 text-white flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-award"></i></div>' +
+      '<div class="flex-1 min-w-[180px]"><p class="font-bold text-amber-700 text-sm">Kamu memenuhi syarat Sertifikat! 🎓</p><p class="text-xs text-amber-600/70">Rata-rata pemahamanmu ' + pct + '% (syarat minimal ' + CERT_THRESHOLD + '%).</p></div>' +
+      '<button onclick="downloadCertificate()" class="px-4 py-2.5 rounded-lg text-xs font-bold bg-amber-500 text-white hover:bg-amber-600 flex items-center gap-1.5"><i class="fa-solid fa-download"></i> Unduh Sertifikat</button>' +
+    '</div>';
+  }
+  return '<div class="w-full mt-3 bg-paper border border-ink/10 rounded-xl p-4 flex items-center gap-4 flex-wrap">' +
+    '<div class="w-12 h-12 rounded-full bg-ink/10 text-ink/40 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-award"></i></div>' +
+    '<div class="flex-1 min-w-[180px]"><p class="font-bold text-ink/70 text-sm">Hampir dapat Sertifikat!</p><p class="text-xs text-ink/40">Pemahamanmu saat ini ' + pct + '%, perlu minimal ' + CERT_THRESHOLD + '%. Coba "Ulangi dari Awal" di kuis yang nilainya masih rendah, ya!</p></div>' +
+  '</div>';
+}
+
+function downloadCertificate(){
+  if (!isEligibleForCertificate()) { alert('Sertifikat belum bisa diunduh. Selesaikan semua buku & capai rata-rata pemahaman minimal ' + CERT_THRESHOLD + '%.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+  const w = doc.internal.pageSize.getWidth();
+  const h = doc.internal.pageSize.getHeight();
+  const info = getLevelInfo(currentUserData.xp);
+  const pct = getOverallUnderstanding();
+
+  doc.setFillColor(21, 23, 28);
+  doc.rect(0, 0, w, h, 'F');
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(8, 8, w - 16, h - 16, 3, 3, 'F');
+
+  doc.setDrawColor(255, 75, 31);
+  doc.setLineWidth(1.1);
+  doc.line(14, 14, 26, 14); doc.line(14, 14, 14, 26);
+  doc.line(w - 14, 14, w - 26, 14); doc.line(w - 14, 14, w - 14, 26);
+  doc.line(14, h - 14, 26, h - 14); doc.line(14, h - 14, 14, h - 26);
+  doc.line(w - 14, h - 14, w - 26, h - 14); doc.line(w - 14, h - 14, w - 14, h - 26);
+
+  doc.setTextColor(21, 23, 28);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('DESIGNCRAFT STUDIO', w / 2, 30, { align: 'center' });
+  doc.setFontSize(26);
+  doc.text('SERTIFIKAT PENYELESAIAN', w / 2, 44, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(90, 90, 90);
+  doc.text('Dengan bangga diberikan kepada', w / 2, 58, { align: 'center' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(28);
+  doc.setTextColor(255, 75, 31);
+  doc.text(currentUser.name, w / 2, 72, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.setTextColor(60, 60, 60);
+  doc.text('atas keberhasilannya menyelesaikan seluruh 6 buku pembelajaran', w / 2, 84, { align: 'center' });
+  doc.text('"Belajar Desain Grafis dari Nol sampai Berkarya" dengan predikat', w / 2, 91, { align: 'center' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(21, 23, 28);
+  doc.text(info.emoji + ' ' + info.label.toUpperCase(), w / 2, 102, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(90, 90, 90);
+  doc.text('Total XP: ' + currentUserData.xp, w / 2 - 65, 114, { align: 'center' });
+  doc.text('Rata-rata Pemahaman: ' + pct + '%', w / 2, 114, { align: 'center' });
+  doc.text('Karya Dibuat: ' + currentUserData.gallery.length, w / 2 + 65, 114, { align: 'center' });
+
+  const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  doc.setFontSize(9);
+  doc.setTextColor(120, 120, 120);
+  doc.text('Lumajang, ' + today, w / 2, h - 24, { align: 'center' });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(21, 23, 28);
+  doc.text('SLB Negeri Tompokersan Lumajang', w / 2, h - 17, { align: 'center' });
+
+  doc.save('Sertifikat-DesignCraft-' + currentUser.name.replace(/\s+/g, '_') + '.pdf');
+
+  if (!currentUserData.certificateEarned) {
+    currentUserData.certificateEarned = true;
+    saveUserData();
+  }
+}
+
 function renderModuleCompletion(m){
   const wrap = document.getElementById('complete-wrap-' + m);
   if (!wrap) return;
@@ -1957,6 +2091,7 @@ function renderModuleCompletion(m){
       html += '<div class="flex-1 min-w-[180px]"><p class="font-bold text-emerald-700 text-sm">Semua 6 buku selesai! Kerja bagus 🎉</p><p class="text-xs text-emerald-600/70">Sekarang coba uji kejelianmu di Tantangan, atau praktikkan semuanya di Lab Desain.</p></div>';
       html += '<div class="flex gap-2 flex-wrap"><button onclick="switchTab(\'challenges\')" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700">Coba Tantangan</button><button onclick="openModule(1)" class="px-4 py-2 rounded-lg text-xs font-bold bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50">Belajar Lagi dari Buku 1</button></div>';
       html += '</div>';
+      html += renderCertificateBlock();
     }
     html += '</div>';
   }
@@ -2318,7 +2453,7 @@ function closeAbkModePanel(){
   document.getElementById('abk-mode-modal').classList.remove('flex');
 }
 function renderAbkToggles(){
-  ['baca','visual','audio','praktik'].forEach(key => {
+  ['baca','visual','audio','praktik','isyarat'].forEach(key => {
     const el = document.getElementById('abk-toggle-' + key);
     if (!el) return;
     const on = !!currentUserData.abkMode[key];
@@ -2331,12 +2466,70 @@ function applyAbkModeClasses(){
   document.body.classList.toggle('mode-abk-visual', !!currentUserData.abkMode.visual);
   document.body.classList.toggle('mode-abk-audio', !!currentUserData.abkMode.audio);
   document.body.classList.toggle('mode-abk-praktik', !!currentUserData.abkMode.praktik);
+  document.body.classList.toggle('mode-abk-isyarat', !!currentUserData.abkMode.isyarat);
+  updateSignLanguageUI();
 }
 function toggleAbkMode(key){
   currentUserData.abkMode[key] = !currentUserData.abkMode[key];
   renderAbkToggles();
   applyAbkModeClasses();
   saveUserData();
+}
+
+/* ---------------- MODE BAHASA ISYARAT (BISINDO) ---------------- */
+/* Isi dengan link "embed" video YouTube per Buku (Share > Embed > salin src URL-nya saja),
+   atau biarkan '' kalau videonya belum ada. Video sebaiknya direkam oleh guru/pendamping
+   yang bisa BISINDO, supaya artinya akurat. Lihat komentar CARA SETUP di paling atas file. */
+const SIGN_LANGUAGE_VIDEOS = {
+  1: '', 2: '', 3: '', 4: '', 5: '', 6: ''
+};
+
+function updateSignLanguageUI(){
+  const active = currentUserData && currentUserData.abkMode && currentUserData.abkMode.isyarat;
+  for (let m = 1; m <= 6; m++) {
+    const wrap = document.getElementById('sign-video-wrap-' + m);
+    if (!wrap) continue;
+    if (!active) { wrap.classList.add('hidden'); continue; }
+    wrap.classList.remove('hidden');
+    const url = SIGN_LANGUAGE_VIDEOS[m];
+    if (url) {
+      wrap.innerHTML = '<div class="aspect-video w-full rounded-xl overflow-hidden border border-indigo-200"><iframe src="' + url + '" class="w-full h-full" allow="autoplay; encrypted-media" allowfullscreen></iframe></div><p class="text-[11px] text-indigo-600 mt-1.5 flex items-center gap-1"><i class="fa-solid fa-hands"></i> Video penjelasan dalam Bahasa Isyarat (BISINDO)</p>';
+    } else {
+      wrap.innerHTML = '<div class="bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-xl p-4 text-center text-xs text-indigo-600"><i class="fa-solid fa-hands text-lg mb-1.5 block"></i>Video bahasa isyarat untuk bab ini belum tersedia.<br>Admin bisa menambahkannya lewat pengaturan <span class="font-mono bg-white px-1 rounded">SIGN_LANGUAGE_VIDEOS</span> di kode.</div>';
+    }
+  }
+  updateFingerspellUI();
+}
+
+/* Ejaan jari (fingerspelling) untuk istilah-istilah kunci — memakai video resmi
+   Kamus SIBI dari Kemendikdasmen (pkplk.kemendikdasmen.go.id/sibi), Lembaga Penelitian
+   dan Pengembangan Sistem Isyarat Bahasa Indonesia. Videonya diputar langsung dari
+   server resmi mereka (bukan disalin ke file ini), untuk tiap huruf A-Z secara otomatis —
+   tidak perlu diisi manual. Kalau suatu saat server mereka mengganti/menghapus videonya,
+   sistem otomatis menampilkan kotak huruf sebagai cadangan supaya tidak error. */
+function sibiVideoUrl(letter){
+  return 'https://pkplk.kemendikdasmen.go.id/sibi/SIBI/katadasar/' + letter + '.webm';
+}
+
+function fingerspellHtml(term){
+  const letters = term.toUpperCase().replace(/[^A-Z ]/g, '').split('');
+  return letters.map(ch => {
+    if (ch === ' ') return '<span class="w-2"></span>';
+    return '<div class="flex flex-col items-center gap-0.5">' +
+      '<video src="' + sibiVideoUrl(ch) + '" autoplay muted loop playsinline class="w-14 h-14 object-cover rounded-lg border border-indigo-200 bg-white" ' +
+      'onerror="this.outerHTML=\'<div class=&quot;w-14 h-14 rounded-lg border-2 border-dashed border-indigo-200 bg-indigo-50 flex items-center justify-center text-xs font-bold text-indigo-300&quot;>' + ch + '</div>\'"></video>' +
+      '<span class="text-[9px] text-indigo-500 font-bold">' + ch + '</span></div>';
+  }).join('');
+}
+
+function updateFingerspellUI(){
+  const active = currentUserData && currentUserData.abkMode && currentUserData.abkMode.isyarat;
+  document.querySelectorAll('.sign-term-slot').forEach(el => {
+    if (!active) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+    el.classList.remove('hidden');
+    const term = el.getAttribute('data-sign-term') || '';
+    el.innerHTML = '<div class="flex flex-wrap items-end gap-1.5 mt-2 p-2 bg-indigo-50/50 rounded-lg border border-indigo-100">' + fingerspellHtml(term) + '</div><p class="text-[9px] text-indigo-400 mt-1">Sumber: Kamus SIBI - Kemendikdasmen</p>';
+  });
 }
 
 /* Text-to-speech sederhana untuk Mode Audio (pakai Web Speech API bawaan browser) */
@@ -3011,6 +3204,7 @@ function openStudentDetail(uid){
   html += '<p class="text-xs text-ink/40">@' + escapeHtml(s.username || '-') + '</p>';
   html += s.accessCode ? '<p class="text-xs text-ink/50 mt-1">Password: <span class="font-mono font-bold bg-paper px-2 py-0.5 rounded">' + escapeHtml(s.accessCode) + '</span></p>' : '<p class="text-[11px] text-ink/30 mt-1">Password tidak tersedia (akun lama)</p>';
   html += '<span class="inline-block mt-2 text-xs font-bold bg-purple-50 text-purple-700 px-3 py-1 rounded-full">' + lvl.emoji + ' ' + lvl.label + '</span>';
+  if (s.certificateEarned) html += ' <span class="inline-block mt-2 text-xs font-bold bg-amber-50 text-amber-700 px-3 py-1 rounded-full">🎓 Sertifikat Diunduh</span>';
   html += '<div class="grid grid-cols-3 gap-3 pt-3 text-center">';
   html += '<div class="bg-paper rounded-xl p-2"><p class="text-lg font-heading font-bold text-ink">' + (s.xp || 0) + '</p><p class="text-[10px] text-ink/40">XP</p></div>';
   html += '<div class="bg-paper rounded-xl p-2"><p class="text-lg font-heading font-bold text-ink">' + ((s.completedModules || []).length) + '/6</p><p class="text-[10px] text-ink/40">Modul Selesai</p></div>';
