@@ -136,6 +136,13 @@
   .abk-toggle-switch.on{background:#8B5CF6}
   .abk-toggle-switch.on::after{transform:translateX(18px)}
   .abk-toggle-switch.off{background:#d4d1c9}
+
+  /* ---- Mesin Buku Digital: halaman per bab ---- */
+  .book-page{display:none}
+  .book-page.active{display:block;animation:fadeIn .25s ease-out}
+  .book-dot{width:7px;height:7px;border-radius:9999px;background:#e7e5e0;transition:all .2s;display:inline-block}
+  .book-dot.active{background:#FF4B1F;width:18px;border-radius:9999px}
+  .book-dot.done{background:#10b981}
 </style>
 </head>
 <body class="bg-paper text-ink font-sans min-h-screen antialiased selection:bg-signal-100">
@@ -437,68 +444,45 @@
 
     <!-- TAB: MODULES -->
     <section id="tab-modules" class="tab-content hidden space-y-6">
-      <div class="bg-white p-2 rounded-2xl border border-ink/10 flex flex-wrap gap-2">
-        <button onclick="openModule(1)" id="mod-tab-1" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-shapes mr-1.5"></i> 1. Elemen</button>
-        <button onclick="openModule(2)" id="mod-tab-2" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-palette mr-1.5"></i> 2. Warna</button>
-        <button onclick="openModule(3)" id="mod-tab-3" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-font mr-1.5"></i> 3. Tipografi</button>
-        <button onclick="openModule(4)" id="mod-tab-4" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-grip mr-1.5"></i> 4. Grid</button>
-        <button onclick="openModule(5)" id="mod-tab-5" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-gem mr-1.5"></i> 5. Branding</button>
-        <button onclick="openModule(6)" id="mod-tab-6" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-mobile-screen mr-1.5"></i> 6. Sosial Media</button>
+      <div id="modules-toc" class="bg-white rounded-2xl border border-ink/10 p-4 space-y-3">
+        <h2 class="font-heading font-bold text-ink text-base flex items-center gap-2"><i class="fa-solid fa-book-open text-signal-500"></i> 📚 Buku Desain — Pilih Bab</h2>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="openModule(1)" id="mod-tab-1" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-shapes mr-1.5"></i> 1. Elemen</button>
+          <button onclick="openModule(2)" id="mod-tab-2" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-palette mr-1.5"></i> 2. Warna</button>
+          <button onclick="openModule(3)" id="mod-tab-3" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-font mr-1.5"></i> 3. Tipografi</button>
+          <button onclick="openModule(4)" id="mod-tab-4" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-grip mr-1.5"></i> 4. Grid</button>
+          <button onclick="openModule(5)" id="mod-tab-5" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-gem mr-1.5"></i> 5. Branding</button>
+          <button onclick="openModule(6)" id="mod-tab-6" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-mobile-screen mr-1.5"></i> 6. Sosial Media</button>
+        </div>
       </div>
 
       <!-- MODULE 1 -->
-      <div id="module-content-1" class="module-body space-y-6">
+      <div id="module-content-1" class="module-body space-y-4">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">1</span> Elemen Dasar &amp; Hirarki Visual</h2>
+            <button onclick="backToTOC()" class="text-xs text-ink/40 hover:text-ink flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Daftar Isi</button>
             <button onclick="speakModule(1)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
           </div>
-          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-1').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-sm">1</span> Elemen Dasar &amp; Hirarki Visual</h2>
+
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba aktivitasnya!</span><button onclick="showBookPage(1,4)" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
           <div class="abk-active-banner baca-banner items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-700"><span>📖 Mode Baca aktif — penjelasan disingkat & tulisan diperbesar.</span></div>
           <div class="abk-active-banner visual-banner items-center gap-2 p-3 bg-pink-50 border border-pink-200 rounded-xl text-xs font-semibold text-pink-700"><span>👀 Mode Visual aktif — fokus ke ikon, teks penjelasan disembunyikan.</span></div>
-          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Desain grafis adalah seni menyampaikan pesan secara visual. Untuk membuat desain efektif, kita harus memahami elemen dasar dan bagaimana menyusun hirarki (urutan penting elemen).</p>
-          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-blue-50 p-3 rounded-xl">📖 Fokus utama adalah bagian yang paling dulu dilihat mata. Bagian penting dibuat lebih besar & menonjol.</p>
 
-          <div id="sim-module-1" class="bg-ink rounded-2xl p-6 text-white space-y-4">
-            <div class="flex justify-between items-center flex-wrap gap-2">
-              <h3 class="font-heading font-bold text-signal-400 flex items-center gap-2 text-base"><i class="fa-solid fa-sliders"></i> Simulator: Kontras &amp; Hirarki</h3>
-              <span class="text-xs bg-white/10 text-white/60 px-3 py-1 rounded-full">Geser opsi di bawah</span>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div id="hierarchy-preview" class="bg-white/5 rounded-xl p-6 border border-white/10 flex flex-col justify-center items-center text-center space-y-3 min-h-[220px]">
-                <span id="demo-badge" class="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded">Pameran Karya</span>
-                <h2 id="demo-title" class="font-bold text-2xl transition-all">LOMBA DESAIN CREATIVE 2026</h2>
-                <p id="demo-subtitle" class="text-sm text-white/60 max-w-xs transition-all">Tunjukkan kreativitas visualmu dan menangkan hadiah menarik!</p>
-                <button id="demo-btn" class="bg-signal-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all">Daftar Sekarang</button>
-              </div>
-              <div class="space-y-4 text-xs">
-                <div>
-                  <label class="block text-white/50 font-semibold mb-1">Mode Hirarki Visual:</label>
-                  <div class="grid grid-cols-2 gap-2">
-                    <button onclick="setHierarchyMode('bad')" class="p-2.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-left"><div class="font-bold text-red-400"><i class="fa-solid fa-xmark mr-1"></i> Buruk</div><div class="text-[11px] text-white/40 mt-0.5">Semua elemen sama besar, mata bingung.</div></button>
-                    <button onclick="setHierarchyMode('good')" class="p-2.5 rounded-lg border border-signal-500 bg-signal-500/10 text-left"><div class="font-bold text-emerald-400"><i class="fa-solid fa-check mr-1"></i> Bagus</div><div class="text-[11px] text-white/40 mt-0.5">Judul menonjol, CTA jelas.</div></button>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-white/50 font-semibold mb-1">Kontras Background:</label>
-                  <div class="flex gap-2 flex-wrap">
-                    <button onclick="setHierarchyBg('dark')" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-white">Gelap</button>
-                    <button onclick="setHierarchyBg('light')" class="px-3 py-1.5 bg-slate-100 hover:bg-white rounded border border-slate-300 text-slate-900">Terang</button>
-                    <button onclick="setHierarchyBg('low')" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded border border-white/10 text-white/40">Kontras Rendah</button>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <div class="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center text-xl shrink-0">🦉</div>
+            <p class="text-xs font-medium text-amber-800" id="deka-text-1">Hai! Aku Deka 👋 Yuk kenalan dulu sama materinya!</p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-eye text-blue-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Focal Point</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Elemen pertama yang dilihat mata saat menatap desain.</p></div>
-            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-circle-half-stroke text-purple-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Kontras Visual</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Perbedaan ukuran/warna untuk memisahkan info penting.</p></div>
-            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-scale-balanced text-emerald-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Keseimbangan</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Simetris (seimbang) atau asimetris (dinamis).</p></div>
+          <!-- HALAMAN 1: Yuk Kenalan -->
+          <div class="book-page active" data-page="1">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">👋 Yuk Kenalan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed">Pernah lihat poster yang bikin bingung harus lihat ke mana dulu? Itu karena desainnya belum punya <strong>hirarki visual</strong> yang jelas. Yuk, kita belajar cara membuat mata orang langsung tahu bagian mana yang paling penting untuk dilihat pertama kali!</p>
           </div>
 
-          <div class="pt-2 border-t border-ink/10">
-            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-blue-500"></i> Contoh Penerapan Nyata: Flyer Acara</h3>
+          <!-- HALAMAN 2: Lihat -->
+          <div class="book-page" data-page="2">
+            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-blue-500"></i> 👀 Lihat: Contoh Flyer Acara</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="rounded-xl overflow-hidden border-2 border-emerald-300">
                 <div class="bg-slate-900 text-white p-5 space-y-2 text-center">
@@ -521,61 +505,124 @@
             </div>
           </div>
 
-          <div id="quiz-wrap-1" class="pt-2 border-t border-ink/10"></div>
+          <!-- HALAMAN 3: Tahukah Kamu -->
+          <div class="book-page" data-page="3">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <p class="abk-detail text-sm text-ink/60 leading-relaxed">Desain grafis adalah seni menyampaikan pesan secara visual. Untuk membuat desain efektif, kita harus memahami elemen dasar dan bagaimana menyusun hirarki (urutan penting elemen).</p>
+            <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-blue-50 p-3 rounded-xl">📖 Fokus utama adalah bagian yang paling dulu dilihat mata. Bagian penting dibuat lebih besar & menonjol.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3">
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-eye text-blue-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Focal Point</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Elemen pertama yang dilihat mata saat menatap desain.</p></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-circle-half-stroke text-purple-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Kontras Visual</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Perbedaan ukuran/warna untuk memisahkan info penting.</p></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-scale-balanced text-emerald-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Keseimbangan</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Simetris (seimbang) atau asimetris (dinamis).</p></div>
+            </div>
+          </div>
+
+          <!-- HALAMAN 4: Coba -->
+          <div class="book-page" data-page="4">
+            <div id="sim-module-1" class="bg-ink rounded-2xl p-6 text-white space-y-4">
+              <div class="flex justify-between items-center flex-wrap gap-2">
+                <h3 class="font-heading font-bold text-signal-400 flex items-center gap-2 text-base"><i class="fa-solid fa-sliders"></i> 🎮 Coba: Kontras &amp; Hirarki</h3>
+                <span class="text-xs bg-white/10 text-white/60 px-3 py-1 rounded-full">Geser opsi di bawah</span>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div id="hierarchy-preview" class="bg-white/5 rounded-xl p-6 border border-white/10 flex flex-col justify-center items-center text-center space-y-3 min-h-[220px]">
+                  <span id="demo-badge" class="text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded">Pameran Karya</span>
+                  <h2 id="demo-title" class="font-bold text-2xl transition-all">LOMBA DESAIN CREATIVE 2026</h2>
+                  <p id="demo-subtitle" class="text-sm text-white/60 max-w-xs transition-all">Tunjukkan kreativitas visualmu dan menangkan hadiah menarik!</p>
+                  <button id="demo-btn" class="bg-signal-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all">Daftar Sekarang</button>
+                </div>
+                <div class="space-y-4 text-xs">
+                  <div>
+                    <label class="block text-white/50 font-semibold mb-1">Mode Hirarki Visual:</label>
+                    <div class="grid grid-cols-2 gap-2">
+                      <button onclick="setHierarchyMode('bad')" class="p-2.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-left"><div class="font-bold text-red-400"><i class="fa-solid fa-xmark mr-1"></i> Buruk</div><div class="text-[11px] text-white/40 mt-0.5">Semua elemen sama besar, mata bingung.</div></button>
+                      <button onclick="setHierarchyMode('good')" class="p-2.5 rounded-lg border border-signal-500 bg-signal-500/10 text-left"><div class="font-bold text-emerald-400"><i class="fa-solid fa-check mr-1"></i> Bagus</div><div class="text-[11px] text-white/40 mt-0.5">Judul menonjol, CTA jelas.</div></button>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-white/50 font-semibold mb-1">Kontras Background:</label>
+                    <div class="flex gap-2 flex-wrap">
+                      <button onclick="setHierarchyBg('dark')" class="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded border border-white/10 text-white">Gelap</button>
+                      <button onclick="setHierarchyBg('light')" class="px-3 py-1.5 bg-slate-100 hover:bg-white rounded border border-slate-300 text-slate-900">Terang</button>
+                      <button onclick="setHierarchyBg('low')" class="px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded border border-white/10 text-white/40">Kontras Rendah</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HALAMAN 5: Latihan -->
+          <div class="book-page" data-page="5">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">✏️ Latihan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed mb-3">Kembali ke halaman "Coba", lalu ubah Mode Hirarki dari <strong>Buruk</strong> ke <strong>Bagus</strong>. Perhatikan: bagian mana yang paling dulu kamu lihat sekarang? Itulah yang disebut <em>focal point</em>!</p>
+            <button onclick="showBookPage(1,4)" class="px-4 py-2 rounded-lg text-xs font-bold bg-paper hover:bg-ink/10 text-ink/70">⬅ Kembali ke Coba</button>
+          </div>
+
+          <!-- HALAMAN 6: Uji Dirimu -->
+          <div class="book-page" data-page="6">
+            <div id="quiz-wrap-1"></div>
+          </div>
+
+          <!-- HALAMAN 7: Ayo Berkarya -->
+          <div class="book-page" data-page="7">
+            <div class="bg-ink rounded-2xl p-6 text-white flex flex-col sm:flex-row items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-signal-500 flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-flask"></i></div>
+              <div class="flex-1"><h3 class="font-heading font-bold text-lg">🎨 Ayo Berkarya!</h3><p class="text-xs text-white/50 mt-1">Sekarang praktikkan hirarki visual dengan membuat poster sendiri di Lab Desain.</p></div>
+              <button onclick="switchTab('studio'); loadTemplate('poster');" class="shrink-0 bg-signal-500 hover:bg-signal-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm">Buka Lab Desain &rarr;</button>
+            </div>
+          </div>
+
+          <!-- HALAMAN 8: Aku Sudah Bisa -->
+          <div class="book-page" data-page="8">
+            <h3 class="font-heading font-bold text-ink text-lg mb-3">🏆 Aku Sudah Bisa!</h3>
+            <div class="space-y-2 mb-4">
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Menentukan focal point (bagian yang paling dulu dilihat)</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Membuat kontras yang jelas</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Membedakan keseimbangan simetris &amp; asimetris</div>
+            </div>
+            <div id="complete-wrap-1"></div>
+          </div>
+
+          <!-- NAVIGASI HALAMAN -->
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-ink/10">
+            <button onclick="prevBookPage(1)" id="book-prev-1" disabled class="w-10 h-10 rounded-full bg-paper hover:bg-ink/10 text-ink/60 flex items-center justify-center disabled:opacity-30 transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="flex flex-col items-center gap-1.5">
+              <span id="book-page-label-1" class="text-xs font-bold text-ink/50">Halaman 1 / 8</span>
+              <div id="book-dots-1" class="flex gap-1.5"><span class="book-dot active"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span></div>
+            </div>
+            <button onclick="nextBookPage(1)" id="book-next-1" class="w-10 h-10 rounded-full bg-signal-500 hover:bg-signal-600 text-white flex items-center justify-center transition-colors"><i class="fa-solid fa-arrow-right"></i></button>
+          </div>
         </div>
       </div>
 
       <!-- MODULE 2 -->
-      <div id="module-content-2" class="module-body hidden space-y-6">
+      <div id="module-content-2" class="module-body hidden space-y-4">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">2</span> Teori Warna &amp; Roda Warna Interaktif</h2>
+            <button onclick="backToTOC()" class="text-xs text-ink/40 hover:text-ink flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Daftar Isi</button>
             <button onclick="speakModule(2)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
           </div>
-          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-2').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-sm">2</span> Teori Warna &amp; Roda Warna Interaktif</h2>
+
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba aktivitasnya!</span><button onclick="showBookPage(2,4)" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
           <div class="abk-active-banner baca-banner items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-700"><span>📖 Mode Baca aktif — penjelasan disingkat & tulisan diperbesar.</span></div>
           <div class="abk-active-banner visual-banner items-center gap-2 p-3 bg-pink-50 border border-pink-200 rounded-xl text-xs font-semibold text-pink-700"><span>👀 Mode Visual aktif — fokus ke ikon, teks penjelasan disembunyikan.</span></div>
-          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Warna membangkitkan emosi dan mengarahkan perhatian. Kombinasi warna yang tepat memakai formula harmoni seperti <strong>Komplementer</strong>, <strong>Analogis</strong>, dan <strong>Triadik</strong>.</p>
-          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-purple-50 p-3 rounded-xl">📖 Warna bisa dipasangkan biar serasi. Coba klik roda warna di bawah untuk lihat contohnya!</p>
 
-          <div id="sim-module-2" class="bg-ink rounded-2xl p-6 text-white grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div class="lg:col-span-5 flex flex-col items-center justify-center">
-              <canvas id="colorWheelCanvas" width="240" height="240" class="rounded-full shadow-lg border-2 border-white/10"></canvas>
-              <span class="text-[11px] text-white/40 mt-2">Klik pada roda warna untuk memilih warna utama!</span>
-            </div>
-            <div class="lg:col-span-7 space-y-4">
-              <div>
-                <label class="block text-xs font-semibold text-white/50 mb-2">Skema Harmoni Warna:</label>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                  <button onclick="setColorHarmony('complementary')" id="harm-complementary" class="harm-btn p-2 rounded-lg border border-signal-500 bg-signal-500/10 text-white font-medium">Komplementer</button>
-                  <button onclick="setColorHarmony('analogous')" id="harm-analogous" class="harm-btn p-2 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Analogis</button>
-                  <button onclick="setColorHarmony('triadic')" id="harm-triadic" class="harm-btn p-2 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Triadik</button>
-                  <button onclick="setColorHarmony('monochromatic')" id="harm-monochromatic" class="harm-btn p-2 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Monokromatik</button>
-                </div>
-              </div>
-              <div>
-                <span class="text-xs text-white/50 block mb-2 font-medium">Palette Hasil Harmoni:</span>
-                <div id="palette-swatches" class="flex h-16 rounded-xl overflow-hidden shadow-md border border-white/10"></div>
-              </div>
-              <div id="color-card-preview" class="p-4 rounded-xl border border-white/10 transition-all flex justify-between items-center">
-                <div><h4 id="preview-card-title" class="font-bold text-sm">Simulasi Kartu UI</h4><p id="preview-card-sub" class="text-xs opacity-70">Lihat bagaimana warna utama &amp; aksen berpadu.</p></div>
-                <button id="preview-card-btn" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">Aksi</button>
-              </div>
-            </div>
+          <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <div class="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center text-xl shrink-0">🦉</div>
+            <p class="text-xs font-medium text-amber-800" id="deka-text-2">Hai! Aku Deka 👋 Yuk kenalan dulu sama materinya!</p>
           </div>
 
-          <div class="pt-2">
-            <h3 class="font-bold text-ink text-base mb-3">Psikologi Warna dalam Brand:</h3>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div class="p-3 bg-red-50 border border-red-200 rounded-xl"><div class="font-bold text-red-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 card-dot-visual"></span>Merah</div><p class="text-ink/60 card-detail-text">Energi, Keberanian, Semangat.</p></div>
-              <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl"><div class="font-bold text-blue-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500 card-dot-visual"></span>Biru</div><p class="text-ink/60 card-detail-text">Kepercayaan, Profesional.</p></div>
-              <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl"><div class="font-bold text-emerald-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 card-dot-visual"></span>Hijau</div><p class="text-ink/60 card-detail-text">Kesehatan, Alam, Tumbuh.</p></div>
-              <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl"><div class="font-bold text-amber-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 card-dot-visual"></span>Kuning</div><p class="text-ink/60 card-detail-text">Keceriaan, Optimisme.</p></div>
-            </div>
+          <!-- HALAMAN 1: Yuk Kenalan -->
+          <div class="book-page active" data-page="1">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">👋 Yuk Kenalan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed">Warna bukan cuma bikin desain "cantik" — warna bisa membangkitkan perasaan dan mengarahkan perhatian orang. Yuk cari tahu bagaimana desainer memilih warna yang serasi!</p>
           </div>
 
-          <div class="pt-2 border-t border-ink/10">
-            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-purple-500"></i> Contoh Penerapan Nyata: Tombol Aplikasi</h3>
+          <!-- HALAMAN 2: Lihat -->
+          <div class="book-page" data-page="2">
+            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-purple-500"></i> 👀 Lihat: Tombol Aplikasi</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="rounded-xl overflow-hidden border-2 border-emerald-300">
                 <div class="bg-white p-5 space-y-3 flex flex-col items-center">
@@ -596,56 +643,122 @@
             </div>
           </div>
 
-          <div id="quiz-wrap-2" class="pt-2 border-t border-ink/10"></div>
+          <!-- HALAMAN 3: Tahukah Kamu -->
+          <div class="book-page" data-page="3">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <p class="abk-detail text-sm text-ink/60 leading-relaxed">Warna membangkitkan emosi dan mengarahkan perhatian. Kombinasi warna yang tepat memakai formula harmoni seperti <strong>Komplementer</strong>, <strong>Analogis</strong>, dan <strong>Triadik</strong>.</p>
+            <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-purple-50 p-3 rounded-xl">📖 Warna bisa dipasangkan biar serasi. Coba klik roda warna di halaman "Coba" untuk lihat contohnya!</p>
+            <div class="pt-3">
+              <h4 class="font-bold text-ink text-sm mb-3">Psikologi Warna dalam Brand:</h4>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                <div class="p-3 bg-red-50 border border-red-200 rounded-xl"><div class="font-bold text-red-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 card-dot-visual"></span>Merah</div><p class="text-ink/60 card-detail-text">Energi, Keberanian, Semangat.</p></div>
+                <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl"><div class="font-bold text-blue-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500 card-dot-visual"></span>Biru</div><p class="text-ink/60 card-detail-text">Kepercayaan, Profesional.</p></div>
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl"><div class="font-bold text-emerald-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 card-dot-visual"></span>Hijau</div><p class="text-ink/60 card-detail-text">Kesehatan, Alam, Tumbuh.</p></div>
+                <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl"><div class="font-bold text-amber-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 card-dot-visual"></span>Kuning</div><p class="text-ink/60 card-detail-text">Keceriaan, Optimisme.</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HALAMAN 4: Coba -->
+          <div class="book-page" data-page="4">
+            <div id="sim-module-2" class="bg-ink rounded-2xl p-6 text-white grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              <div class="lg:col-span-5 flex flex-col items-center justify-center">
+                <canvas id="colorWheelCanvas" width="240" height="240" class="rounded-full shadow-lg border-2 border-white/10"></canvas>
+                <span class="text-[11px] text-white/40 mt-2">Klik pada roda warna untuk memilih warna utama!</span>
+              </div>
+              <div class="lg:col-span-7 space-y-4">
+                <div>
+                  <label class="block text-xs font-semibold text-white/50 mb-2">Skema Harmoni Warna:</label>
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <button onclick="setColorHarmony('complementary')" id="harm-complementary" class="harm-btn p-2 rounded-lg border border-signal-500 bg-signal-500/10 text-white font-medium">Komplementer</button>
+                    <button onclick="setColorHarmony('analogous')" id="harm-analogous" class="harm-btn p-2 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Analogis</button>
+                    <button onclick="setColorHarmony('triadic')" id="harm-triadic" class="harm-btn p-2 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Triadik</button>
+                    <button onclick="setColorHarmony('monochromatic')" id="harm-monochromatic" class="harm-btn p-2 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Monokromatik</button>
+                  </div>
+                </div>
+                <div>
+                  <span class="text-xs text-white/50 block mb-2 font-medium">Palette Hasil Harmoni:</span>
+                  <div id="palette-swatches" class="flex h-16 rounded-xl overflow-hidden shadow-md border border-white/10"></div>
+                </div>
+                <div id="color-card-preview" class="p-4 rounded-xl border border-white/10 transition-all flex justify-between items-center">
+                  <div><h4 id="preview-card-title" class="font-bold text-sm">Simulasi Kartu UI</h4><p id="preview-card-sub" class="text-xs opacity-70">Lihat bagaimana warna utama &amp; aksen berpadu.</p></div>
+                  <button id="preview-card-btn" class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all">Aksi</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HALAMAN 5: Latihan -->
+          <div class="book-page" data-page="5">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">✏️ Latihan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed mb-3">Kembali ke halaman "Coba", pilih warna favoritmu di roda warna, lalu coba semua 4 skema harmoni satu per satu. Skema mana yang menurutmu paling cocok untuk poster acara sekolah?</p>
+            <button onclick="showBookPage(2,4)" class="px-4 py-2 rounded-lg text-xs font-bold bg-paper hover:bg-ink/10 text-ink/70">⬅ Kembali ke Coba</button>
+          </div>
+
+          <!-- HALAMAN 6: Uji Dirimu -->
+          <div class="book-page" data-page="6">
+            <div id="quiz-wrap-2"></div>
+          </div>
+
+          <!-- HALAMAN 7: Ayo Berkarya -->
+          <div class="book-page" data-page="7">
+            <div class="bg-ink rounded-2xl p-6 text-white flex flex-col sm:flex-row items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-signal-500 flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-flask"></i></div>
+              <div class="flex-1"><h3 class="font-heading font-bold text-lg">🎨 Ayo Berkarya!</h3><p class="text-xs text-white/50 mt-1">Coba terapkan skema warna favoritmu ke sebuah logo sederhana di Lab Desain.</p></div>
+              <button onclick="switchTab('studio'); loadTemplate('logo');" class="shrink-0 bg-signal-500 hover:bg-signal-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm">Buka Lab Desain &rarr;</button>
+            </div>
+          </div>
+
+          <!-- HALAMAN 8: Aku Sudah Bisa -->
+          <div class="book-page" data-page="8">
+            <h3 class="font-heading font-bold text-ink text-lg mb-3">🏆 Aku Sudah Bisa!</h3>
+            <div class="space-y-2 mb-4">
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Memilih warna dari roda warna</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Membuat skema harmoni warna (komplementer, analogis, dll)</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Mengenal makna psikologi warna dasar</div>
+            </div>
+            <div id="complete-wrap-2"></div>
+          </div>
+
+          <!-- NAVIGASI HALAMAN -->
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-ink/10">
+            <button onclick="prevBookPage(2)" id="book-prev-2" disabled class="w-10 h-10 rounded-full bg-paper hover:bg-ink/10 text-ink/60 flex items-center justify-center disabled:opacity-30 transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="flex flex-col items-center gap-1.5">
+              <span id="book-page-label-2" class="text-xs font-bold text-ink/50">Halaman 1 / 8</span>
+              <div id="book-dots-2" class="flex gap-1.5"><span class="book-dot active"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span></div>
+            </div>
+            <button onclick="nextBookPage(2)" id="book-next-2" class="w-10 h-10 rounded-full bg-signal-500 hover:bg-signal-600 text-white flex items-center justify-center transition-colors"><i class="fa-solid fa-arrow-right"></i></button>
+          </div>
         </div>
       </div>
 
       <!-- MODULE 3 -->
-      <div id="module-content-3" class="module-body hidden space-y-6">
+      <div id="module-content-3" class="module-body hidden space-y-4">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">3</span> Seni Tipografi</h2>
+            <button onclick="backToTOC()" class="text-xs text-ink/40 hover:text-ink flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Daftar Isi</button>
             <button onclick="speakModule(3)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
           </div>
-          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-3').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm">3</span> Seni Tipografi</h2>
+
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba aktivitasnya!</span><button onclick="showBookPage(3,4)" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
           <div class="abk-active-banner baca-banner items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-700"><span>📖 Mode Baca aktif — penjelasan disingkat & tulisan diperbesar.</span></div>
           <div class="abk-active-banner visual-banner items-center gap-2 p-3 bg-pink-50 border border-pink-200 rounded-xl text-xs font-semibold text-pink-700"><span>👀 Mode Visual aktif — fokus ke ikon, teks penjelasan disembunyikan.</span></div>
-          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Tipografi bukan hanya memilih jenis huruf, tapi mengatur jarak antar karakter (Kerning/Tracking), jarak antar baris (Leading), dan kesesuaian font dengan pesan.</p>
-          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-emerald-50 p-3 rounded-xl">📖 Huruf yang rapi jaraknya lebih enak dibaca. Coba geser tombol di bawah untuk melihat bedanya!</p>
 
-          <div id="sim-module-3" class="bg-ink rounded-2xl p-6 text-white space-y-6">
-            <div class="flex justify-between items-center flex-wrap gap-2">
-              <h3 class="font-heading font-bold text-emerald-400 flex items-center gap-2 text-base"><i class="fa-solid fa-sliders"></i> Lab Tipografi Interaktif</h3>
-              <span class="text-xs bg-white/10 text-white/60 px-3 py-1 rounded-full">Eksperimen parameter huruf</span>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-              <div class="lg:col-span-5 space-y-4 text-xs">
-                <div>
-                  <label class="block text-white/50 font-semibold mb-1">Gaya Font:</label>
-                  <select id="typo-font-family" onchange="updateTypoLab()" class="w-full bg-white/5 border border-white/10 text-white rounded-lg p-2.5 outline-none focus:border-emerald-500">
-                    <option value="font-sans">Sans-Serif (Inter)</option>
-                    <option value="font-heading">Display / Geometrik (Space Grotesk)</option>
-                  </select>
-                </div>
-                <div>
-                  <div class="flex justify-between text-white/50 font-semibold mb-1"><span>Jarak Baris (Leading):</span><span id="typo-leading-val">1.4</span></div>
-                  <input type="range" id="typo-leading-slider" min="0.8" max="2.5" step="0.1" value="1.4" oninput="updateTypoLab()" class="w-full accent-emerald-500">
-                </div>
-                <div>
-                  <div class="flex justify-between text-white/50 font-semibold mb-1"><span>Jarak Huruf (Tracking):</span><span id="typo-tracking-val">0px</span></div>
-                  <input type="range" id="typo-tracking-slider" min="-2" max="10" step="1" value="0" oninput="updateTypoLab()" class="w-full accent-emerald-500">
-                </div>
-              </div>
-              <div class="lg:col-span-7 bg-white/5 rounded-xl p-6 border border-white/10 space-y-3 min-h-[220px]">
-                <span class="text-[10px] uppercase font-bold text-emerald-400 tracking-widest block border-b border-white/10 pb-1">Pratinjau Paragraf</span>
-                <h3 id="typo-demo-title" class="text-xl font-bold text-white">Keindahan Desain Terletak pada Detail Tipografi</h3>
-                <p id="typo-demo-body" class="text-sm text-white/60 transition-all">Desain yang bagus dapat dibaca dengan mudah tanpa membuat mata lelah. Mengatur spasi baris dan jarak huruf yang pas meningkatkan keterbacaan secara drastis!</p>
-              </div>
-            </div>
+          <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <div class="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center text-xl shrink-0">🦉</div>
+            <p class="text-xs font-medium text-amber-800" id="deka-text-3">Hai! Aku Deka 👋 Yuk kenalan dulu sama materinya!</p>
           </div>
 
-          <div class="pt-2 border-t border-ink/10">
-            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-emerald-500"></i> Contoh Penerapan Nyata: Artikel</h3>
+          <!-- HALAMAN 1: Yuk Kenalan -->
+          <div class="book-page active" data-page="1">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">👋 Yuk Kenalan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed">Pernah baca tulisan yang bikin mata capek? Itu bukan salahmu — itu soal tipografi! Yuk belajar mengatur huruf supaya nyaman dibaca siapa saja.</p>
+          </div>
+
+          <!-- HALAMAN 2: Lihat -->
+          <div class="book-page" data-page="2">
+            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-emerald-500"></i> 👀 Lihat: Artikel</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="rounded-xl overflow-hidden border-2 border-emerald-300 bg-white p-4 space-y-2">
                 <h4 class="font-bold text-base text-ink">Tips Merawat Tanaman Hias</h4>
@@ -660,43 +773,118 @@
             </div>
           </div>
 
-          <div id="quiz-wrap-3" class="pt-2 border-t border-ink/10"></div>
+          <!-- HALAMAN 3: Tahukah Kamu -->
+          <div class="book-page" data-page="3">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <p class="abk-detail text-sm text-ink/60 leading-relaxed">Tipografi bukan hanya memilih jenis huruf, tapi mengatur jarak antar karakter (Kerning/Tracking), jarak antar baris (Leading), dan kesesuaian font dengan pesan.</p>
+            <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-emerald-50 p-3 rounded-xl">📖 Huruf yang rapi jaraknya lebih enak dibaca. Coba geser tombol di halaman "Coba" untuk melihat bedanya!</p>
+          </div>
+
+          <!-- HALAMAN 4: Coba -->
+          <div class="book-page" data-page="4">
+            <div id="sim-module-3" class="bg-ink rounded-2xl p-6 text-white space-y-6">
+              <div class="flex justify-between items-center flex-wrap gap-2">
+                <h3 class="font-heading font-bold text-emerald-400 flex items-center gap-2 text-base"><i class="fa-solid fa-sliders"></i> Lab Tipografi Interaktif</h3>
+                <span class="text-xs bg-white/10 text-white/60 px-3 py-1 rounded-full">Eksperimen parameter huruf</span>
+              </div>
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <div class="lg:col-span-5 space-y-4 text-xs">
+                  <div>
+                    <label class="block text-white/50 font-semibold mb-1">Gaya Font:</label>
+                    <select id="typo-font-family" onchange="updateTypoLab()" class="w-full bg-white/5 border border-white/10 text-white rounded-lg p-2.5 outline-none focus:border-emerald-500">
+                      <option value="font-sans">Sans-Serif (Inter)</option>
+                      <option value="font-heading">Display / Geometrik (Space Grotesk)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-white/50 font-semibold mb-1"><span>Jarak Baris (Leading):</span><span id="typo-leading-val">1.4</span></div>
+                    <input type="range" id="typo-leading-slider" min="0.8" max="2.5" step="0.1" value="1.4" oninput="updateTypoLab()" class="w-full accent-emerald-500">
+                  </div>
+                  <div>
+                    <div class="flex justify-between text-white/50 font-semibold mb-1"><span>Jarak Huruf (Tracking):</span><span id="typo-tracking-val">0px</span></div>
+                    <input type="range" id="typo-tracking-slider" min="-2" max="10" step="1" value="0" oninput="updateTypoLab()" class="w-full accent-emerald-500">
+                  </div>
+                </div>
+                <div class="lg:col-span-7 bg-white/5 rounded-xl p-6 border border-white/10 space-y-3 min-h-[220px]">
+                  <span class="text-[10px] uppercase font-bold text-emerald-400 tracking-widest block border-b border-white/10 pb-1">Pratinjau Paragraf</span>
+                  <h3 id="typo-demo-title" class="text-xl font-bold text-white">Keindahan Desain Terletak pada Detail Tipografi</h3>
+                  <p id="typo-demo-body" class="text-sm text-white/60 transition-all">Desain yang bagus dapat dibaca dengan mudah tanpa membuat mata lelah. Mengatur spasi baris dan jarak huruf yang pas meningkatkan keterbacaan secara drastis!</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HALAMAN 5: Latihan -->
+          <div class="book-page" data-page="5">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">✏️ Latihan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed mb-3">Kembali ke halaman "Coba", coba geser Leading sampai paling kecil (0.8) lalu paling besar (2.5). Rasakan bedanya — mana yang lebih nyaman kamu baca?</p>
+            <button onclick="showBookPage(3,4)" class="px-4 py-2 rounded-lg text-xs font-bold bg-paper hover:bg-ink/10 text-ink/70">⬅ Kembali ke Coba</button>
+          </div>
+
+          <!-- HALAMAN 6: Uji Dirimu -->
+          <div class="book-page" data-page="6">
+            <div id="quiz-wrap-3"></div>
+          </div>
+
+          <!-- HALAMAN 7: Ayo Berkarya -->
+          <div class="book-page" data-page="7">
+            <div class="bg-ink rounded-2xl p-6 text-white flex flex-col sm:flex-row items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-signal-500 flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-flask"></i></div>
+              <div class="flex-1"><h3 class="font-heading font-bold text-lg">🎨 Ayo Berkarya!</h3><p class="text-xs text-white/50 mt-1">Coba buat kartu ucapan dengan judul & isi teks yang mudah dibaca di Lab Desain.</p></div>
+              <button onclick="switchTab('studio'); loadTemplate('greeting');" class="shrink-0 bg-signal-500 hover:bg-signal-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm">Buka Lab Desain &rarr;</button>
+            </div>
+          </div>
+
+          <!-- HALAMAN 8: Aku Sudah Bisa -->
+          <div class="book-page" data-page="8">
+            <h3 class="font-heading font-bold text-ink text-lg mb-3">🏆 Aku Sudah Bisa!</h3>
+            <div class="space-y-2 mb-4">
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Membedakan font Serif &amp; Sans-serif</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Mengatur jarak baris (leading) &amp; jarak huruf (tracking)</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Membuat tulisan yang nyaman dibaca</div>
+            </div>
+            <div id="complete-wrap-3"></div>
+          </div>
+
+          <!-- NAVIGASI HALAMAN -->
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-ink/10">
+            <button onclick="prevBookPage(3)" id="book-prev-3" disabled class="w-10 h-10 rounded-full bg-paper hover:bg-ink/10 text-ink/60 flex items-center justify-center disabled:opacity-30 transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="flex flex-col items-center gap-1.5">
+              <span id="book-page-label-3" class="text-xs font-bold text-ink/50">Halaman 1 / 8</span>
+              <div id="book-dots-3" class="flex gap-1.5"><span class="book-dot active"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span></div>
+            </div>
+            <button onclick="nextBookPage(3)" id="book-next-3" class="w-10 h-10 rounded-full bg-signal-500 hover:bg-signal-600 text-white flex items-center justify-center transition-colors"><i class="fa-solid fa-arrow-right"></i></button>
+          </div>
         </div>
       </div>
 
       <!-- MODULE 4 -->
-      <div id="module-content-4" class="module-body hidden space-y-6">
+      <div id="module-content-4" class="module-body hidden space-y-4">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm">4</span> Tata Letak, Grid &amp; Rule of Thirds</h2>
+            <button onclick="backToTOC()" class="text-xs text-ink/40 hover:text-ink flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Daftar Isi</button>
             <button onclick="speakModule(4)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
           </div>
-          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-4').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-sm">4</span> Tata Letak, Grid &amp; Rule of Thirds</h2>
+
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba aktivitasnya!</span><button onclick="showBookPage(4,4)" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
           <div class="abk-active-banner baca-banner items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-700"><span>📖 Mode Baca aktif — penjelasan disingkat & tulisan diperbesar.</span></div>
           <div class="abk-active-banner visual-banner items-center gap-2 p-3 bg-pink-50 border border-pink-200 rounded-xl text-xs font-semibold text-pink-700"><span>👀 Mode Visual aktif — fokus ke ikon, teks penjelasan disembunyikan.</span></div>
-          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Rule of Thirds membimbing mata pemirsa menuju titik fokus alami. Garis grid menjaga elemen tetap rapi dan terstruktur.</p>
-          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-amber-50 p-3 rounded-xl">📖 Bagi gambar jadi 9 kotak. Taruh benda penting di garis potongnya, jangan di tengah-tengah terus.</p>
 
-          <div id="sim-module-4" class="bg-ink rounded-2xl p-6 text-white space-y-4">
-            <div class="flex justify-between items-center">
-              <h3 class="font-heading font-bold text-signal-400 flex items-center gap-2 text-base"><i class="fa-solid fa-border-all"></i> Rule of Thirds &amp; Overlay Grid</h3>
-              <button onclick="toggleDemoGrid()" class="text-xs bg-signal-500/10 text-signal-300 hover:bg-signal-500/20 px-3 py-1.5 rounded-lg border border-signal-500/30">Toggle Garis Grid</button>
-            </div>
-            <div class="relative bg-white/5 rounded-xl p-8 border border-white/10 min-h-[260px] flex items-center justify-center overflow-hidden">
-              <div id="demo-grid-overlay" class="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-40 transition-opacity">
-                <div class="border-r border-b border-signal-400/50"></div><div class="border-r border-b border-signal-400/50"></div><div class="border-b border-signal-400/50"></div>
-                <div class="border-r border-b border-signal-400/50"></div><div class="border-r border-b border-signal-400/50"></div><div class="border-b border-signal-400/50"></div>
-                <div class="border-r border-signal-400/50"></div><div class="border-r border-signal-400/50"></div><div></div>
-              </div>
-              <div class="relative z-10 w-full max-w-md bg-white/10 border border-white/10 rounded-xl p-4 shadow-xl flex items-center space-x-4">
-                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-signal-400 to-rose-500 flex items-center justify-center text-white font-bold text-xl shrink-0"><i class="fa-solid fa-camera"></i></div>
-                <div><h4 class="font-bold text-sm text-white">Elemen Fokus Utama</h4><p class="text-xs text-white/50">Diletakkan tepat di perpotongan garis sepertiga untuk daya tarik maksimal.</p></div>
-              </div>
-            </div>
+          <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <div class="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center text-xl shrink-0">🦉</div>
+            <p class="text-xs font-medium text-amber-800" id="deka-text-4">Hai! Aku Deka 👋 Yuk kenalan dulu sama materinya!</p>
           </div>
 
-          <div class="pt-2 border-t border-ink/10">
-            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-amber-500"></i> Contoh Penerapan Nyata: Foto Produk</h3>
+          <!-- HALAMAN 1: Yuk Kenalan -->
+          <div class="book-page active" data-page="1">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">👋 Yuk Kenalan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed">Kenapa foto-foto keren jarang menaruh objeknya pas di tengah? Ada triknya, namanya Rule of Thirds. Yuk kita cari tahu triknya!</p>
+          </div>
+
+          <!-- HALAMAN 2: Lihat -->
+          <div class="book-page" data-page="2">
+            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-amber-500"></i> 👀 Lihat: Foto Produk</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="rounded-xl overflow-hidden border-2 border-emerald-300 bg-slate-100 p-4">
                 <div class="relative h-32 flex items-end justify-start">
@@ -713,55 +901,105 @@
             </div>
           </div>
 
-          <div id="quiz-wrap-4" class="pt-2 border-t border-ink/10"></div>
+          <!-- HALAMAN 3: Tahukah Kamu -->
+          <div class="book-page" data-page="3">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <p class="abk-detail text-sm text-ink/60 leading-relaxed">Rule of Thirds membimbing mata pemirsa menuju titik fokus alami. Garis grid menjaga elemen tetap rapi dan terstruktur.</p>
+            <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-amber-50 p-3 rounded-xl">📖 Bagi gambar jadi 9 kotak. Taruh benda penting di garis potongnya, jangan di tengah-tengah terus.</p>
+          </div>
+
+          <!-- HALAMAN 4: Coba -->
+          <div class="book-page" data-page="4">
+            <div id="sim-module-4" class="bg-ink rounded-2xl p-6 text-white space-y-4">
+              <div class="flex justify-between items-center">
+                <h3 class="font-heading font-bold text-signal-400 flex items-center gap-2 text-base"><i class="fa-solid fa-border-all"></i> Rule of Thirds &amp; Overlay Grid</h3>
+                <button onclick="toggleDemoGrid()" class="text-xs bg-signal-500/10 text-signal-300 hover:bg-signal-500/20 px-3 py-1.5 rounded-lg border border-signal-500/30">Toggle Garis Grid</button>
+              </div>
+              <div class="relative bg-white/5 rounded-xl p-8 border border-white/10 min-h-[260px] flex items-center justify-center overflow-hidden">
+                <div id="demo-grid-overlay" class="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-40 transition-opacity">
+                  <div class="border-r border-b border-signal-400/50"></div><div class="border-r border-b border-signal-400/50"></div><div class="border-b border-signal-400/50"></div>
+                  <div class="border-r border-b border-signal-400/50"></div><div class="border-r border-b border-signal-400/50"></div><div class="border-b border-signal-400/50"></div>
+                  <div class="border-r border-signal-400/50"></div><div class="border-r border-signal-400/50"></div><div></div>
+                </div>
+                <div class="relative z-10 w-full max-w-md bg-white/10 border border-white/10 rounded-xl p-4 shadow-xl flex items-center space-x-4">
+                  <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-signal-400 to-rose-500 flex items-center justify-center text-white font-bold text-xl shrink-0"><i class="fa-solid fa-camera"></i></div>
+                  <div><h4 class="font-bold text-sm text-white">Elemen Fokus Utama</h4><p class="text-xs text-white/50">Diletakkan tepat di perpotongan garis sepertiga untuk daya tarik maksimal.</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- HALAMAN 5: Latihan -->
+          <div class="book-page" data-page="5">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">✏️ Latihan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed mb-3">Kembali ke halaman "Coba", nyalakan garis grid-nya. Perhatikan kartu putih itu — apakah posisinya tepat di perpotongan garis? Coba bayangkan kalau ditaruh di tengah, apa bedanya?</p>
+            <button onclick="showBookPage(4,4)" class="px-4 py-2 rounded-lg text-xs font-bold bg-paper hover:bg-ink/10 text-ink/70">⬅ Kembali ke Coba</button>
+          </div>
+
+          <!-- HALAMAN 6: Uji Dirimu -->
+          <div class="book-page" data-page="6">
+            <div id="quiz-wrap-4"></div>
+          </div>
+
+          <!-- HALAMAN 7: Ayo Berkarya -->
+          <div class="book-page" data-page="7">
+            <div class="bg-ink rounded-2xl p-6 text-white flex flex-col sm:flex-row items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-signal-500 flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-flask"></i></div>
+              <div class="flex-1"><h3 class="font-heading font-bold text-lg">🎨 Ayo Berkarya!</h3><p class="text-xs text-white/50 mt-1">Susun sebuah post Instagram dengan tata letak yang rapi di Lab Desain.</p></div>
+              <button onclick="switchTab('studio'); loadTemplate('instagram');" class="shrink-0 bg-signal-500 hover:bg-signal-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm">Buka Lab Desain &rarr;</button>
+            </div>
+          </div>
+
+          <!-- HALAMAN 8: Aku Sudah Bisa -->
+          <div class="book-page" data-page="8">
+            <h3 class="font-heading font-bold text-ink text-lg mb-3">🏆 Aku Sudah Bisa!</h3>
+            <div class="space-y-2 mb-4">
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Menerapkan Rule of Thirds</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Memahami ruang kosong (negative space)</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Menyusun elemen agar rapi &amp; teratur</div>
+            </div>
+            <div id="complete-wrap-4"></div>
+          </div>
+
+          <!-- NAVIGASI HALAMAN -->
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-ink/10">
+            <button onclick="prevBookPage(4)" id="book-prev-4" disabled class="w-10 h-10 rounded-full bg-paper hover:bg-ink/10 text-ink/60 flex items-center justify-center disabled:opacity-30 transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="flex flex-col items-center gap-1.5">
+              <span id="book-page-label-4" class="text-xs font-bold text-ink/50">Halaman 1 / 8</span>
+              <div id="book-dots-4" class="flex gap-1.5"><span class="book-dot active"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span></div>
+            </div>
+            <button onclick="nextBookPage(4)" id="book-next-4" class="w-10 h-10 rounded-full bg-signal-500 hover:bg-signal-600 text-white flex items-center justify-center transition-colors"><i class="fa-solid fa-arrow-right"></i></button>
+          </div>
         </div>
       </div>
 
       <!-- MODULE 5 -->
-      <div id="module-content-5" class="module-body hidden space-y-6">
+      <div id="module-content-5" class="module-body hidden space-y-4">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-sm">5</span> Branding &amp; Identitas Visual</h2>
+            <button onclick="backToTOC()" class="text-xs text-ink/40 hover:text-ink flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Daftar Isi</button>
             <button onclick="speakModule(5)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
           </div>
-          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-5').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-sm">5</span> Branding &amp; Identitas Visual</h2>
+
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba aktivitasnya!</span><button onclick="showBookPage(5,4)" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
           <div class="abk-active-banner baca-banner items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-700"><span>📖 Mode Baca aktif — penjelasan disingkat & tulisan diperbesar.</span></div>
           <div class="abk-active-banner visual-banner items-center gap-2 p-3 bg-pink-50 border border-pink-200 rounded-xl text-xs font-semibold text-pink-700"><span>👀 Mode Visual aktif — fokus ke ikon, teks penjelasan disembunyikan.</span></div>
-          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Logo adalah wajah sebuah brand. Ada beberapa jenis logo, dan yang tak kalah penting: brand yang kuat harus <strong>konsisten</strong> menjaga warna, font, dan gaya visualnya di semua media.</p>
-          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-rose-50 p-3 rounded-xl">📖 Logo adalah wajah sebuah brand/usaha. Pakai warna & gaya yang sama terus supaya orang mudah ingat.</p>
 
-          <div id="sim-module-5" class="bg-ink rounded-2xl p-6 text-white space-y-4">
-            <h3 class="font-heading font-bold text-rose-400 flex items-center gap-2 text-base"><i class="fa-solid fa-shapes"></i> Simulator: Jenis-Jenis Logo</h3>
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-              <div class="lg:col-span-5 grid grid-cols-1 gap-2 text-xs">
-                <button onclick="setLogoType('wordmark')" id="logo-btn-wordmark" class="logo-type-btn text-left p-2.5 rounded-lg border border-rose-500 bg-rose-500/10 font-semibold">Wordmark</button>
-                <button onclick="setLogoType('lettermark')" id="logo-btn-lettermark" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Lettermark</button>
-                <button onclick="setLogoType('pictorial')" id="logo-btn-pictorial" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Pictorial Mark</button>
-                <button onclick="setLogoType('abstract')" id="logo-btn-abstract" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Abstract Mark</button>
-                <button onclick="setLogoType('combination')" id="logo-btn-combination" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Combination Mark</button>
-              </div>
-              <div class="lg:col-span-7 bg-white/5 rounded-xl p-6 border border-white/10 min-h-[220px] flex flex-col items-center justify-center text-center space-y-3">
-                <div id="logo-demo-visual" class="w-20 h-20 rounded-2xl bg-rose-500 flex items-center justify-center text-3xl font-heading font-bold">Aa</div>
-                <h4 id="logo-demo-title" class="font-bold text-lg">Wordmark</h4>
-                <p id="logo-demo-desc" class="text-xs text-white/50 max-w-xs">Logo berupa nama brand yang ditulis dengan gaya huruf (tipografi) khas, tanpa simbol tambahan. Contoh: Google, Coca-Cola.</p>
-              </div>
-            </div>
+          <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <div class="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center text-xl shrink-0">🦉</div>
+            <p class="text-xs font-medium text-amber-800" id="deka-text-5">Hai! Aku Deka 👋 Yuk kenalan dulu sama materinya!</p>
           </div>
 
-          <div class="bg-ink rounded-2xl p-6 text-white space-y-4">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-              <h3 class="font-heading font-bold text-rose-400 flex items-center gap-2 text-base"><i class="fa-solid fa-swatchbook"></i> Kenapa Konsistensi Penting?</h3>
-              <div class="flex bg-white/5 rounded-lg p-1 text-xs">
-                <button onclick="setBrandConsistency(true)" id="brand-btn-consistent" class="px-3 py-1.5 rounded-md font-semibold bg-rose-500 text-white">Konsisten</button>
-                <button onclick="setBrandConsistency(false)" id="brand-btn-inconsistent" class="px-3 py-1.5 rounded-md font-semibold text-white/50">Tidak Konsisten</button>
-              </div>
-            </div>
-            <div id="brand-cards-preview" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
-            <p id="brand-consistency-note" class="text-xs text-white/50"></p>
+          <!-- HALAMAN 1: Yuk Kenalan -->
+          <div class="book-page active" data-page="1">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">👋 Yuk Kenalan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed">Kenapa kita bisa langsung tahu itu logo McDonald's cuma dari lengkungan M kuningnya? Itulah kekuatan branding! Yuk belajar bikin identitas visual yang gampang diingat.</p>
           </div>
 
-          <div class="pt-2 border-t border-ink/10">
-            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-rose-500"></i> Contoh Penerapan Nyata: Studi Kasus Mini Brand</h3>
+          <!-- HALAMAN 2: Lihat -->
+          <div class="book-page" data-page="2">
+            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-rose-500"></i> 👀 Lihat: Studi Kasus Mini Brand</h3>
             <div class="rounded-xl border border-ink/10 bg-paper p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
               <div class="bg-white rounded-lg p-3 space-y-1"><div class="w-10 h-10 mx-auto rounded-full bg-rose-500 flex items-center justify-center text-white font-heading font-bold text-sm">KS</div><p class="text-[11px] font-bold text-ink">Logo "Kopi Senja"</p></div>
               <div class="bg-white rounded-lg p-3 space-y-1"><div class="w-10 h-10 mx-auto rounded-lg bg-rose-500 flex items-center justify-center text-white"><i class="fa-solid fa-mug-hot"></i></div><p class="text-[11px] font-bold text-ink">Kemasan Cup</p></div>
@@ -770,53 +1008,117 @@
             <p class="text-[11px] text-ink/50 mt-2">Warna rose &amp; gaya ikon yang sama dipakai di logo, kemasan, dan media sosial — inilah yang membuat brand "Kopi Senja" mudah dikenali di mana saja.</p>
           </div>
 
-          <div id="quiz-wrap-5" class="pt-2 border-t border-ink/10"></div>
+          <!-- HALAMAN 3: Tahukah Kamu -->
+          <div class="book-page" data-page="3">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <p class="abk-detail text-sm text-ink/60 leading-relaxed">Logo adalah wajah sebuah brand. Ada beberapa jenis logo, dan yang tak kalah penting: brand yang kuat harus <strong>konsisten</strong> menjaga warna, font, dan gaya visualnya di semua media.</p>
+            <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-rose-50 p-3 rounded-xl">📖 Logo adalah wajah sebuah brand/usaha. Pakai warna & gaya yang sama terus supaya orang mudah ingat.</p>
+          </div>
+
+          <!-- HALAMAN 4: Coba -->
+          <div class="book-page" data-page="4">
+            <div id="sim-module-5" class="bg-ink rounded-2xl p-6 text-white space-y-4">
+              <h3 class="font-heading font-bold text-rose-400 flex items-center gap-2 text-base"><i class="fa-solid fa-shapes"></i> Simulator: Jenis-Jenis Logo</h3>
+              <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                <div class="lg:col-span-5 grid grid-cols-1 gap-2 text-xs">
+                  <button onclick="setLogoType('wordmark')" id="logo-btn-wordmark" class="logo-type-btn text-left p-2.5 rounded-lg border border-rose-500 bg-rose-500/10 font-semibold">Wordmark</button>
+                  <button onclick="setLogoType('lettermark')" id="logo-btn-lettermark" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Lettermark</button>
+                  <button onclick="setLogoType('pictorial')" id="logo-btn-pictorial" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Pictorial Mark</button>
+                  <button onclick="setLogoType('abstract')" id="logo-btn-abstract" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Abstract Mark</button>
+                  <button onclick="setLogoType('combination')" id="logo-btn-combination" class="logo-type-btn text-left p-2.5 rounded-lg border border-white/10 bg-white/5 text-white/60 hover:bg-white/10">Combination Mark</button>
+                </div>
+                <div class="lg:col-span-7 bg-white/5 rounded-xl p-6 border border-white/10 min-h-[220px] flex flex-col items-center justify-center text-center space-y-3">
+                  <div id="logo-demo-visual" class="w-20 h-20 rounded-2xl bg-rose-500 flex items-center justify-center text-3xl font-heading font-bold">Aa</div>
+                  <h4 id="logo-demo-title" class="font-bold text-lg">Wordmark</h4>
+                  <p id="logo-demo-desc" class="text-xs text-white/50 max-w-xs">Logo berupa nama brand yang ditulis dengan gaya huruf (tipografi) khas, tanpa simbol tambahan. Contoh: Google, Coca-Cola.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-ink rounded-2xl p-6 text-white space-y-4 mt-4">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <h3 class="font-heading font-bold text-rose-400 flex items-center gap-2 text-base"><i class="fa-solid fa-swatchbook"></i> Kenapa Konsistensi Penting?</h3>
+                <div class="flex bg-white/5 rounded-lg p-1 text-xs">
+                  <button onclick="setBrandConsistency(true)" id="brand-btn-consistent" class="px-3 py-1.5 rounded-md font-semibold bg-rose-500 text-white">Konsisten</button>
+                  <button onclick="setBrandConsistency(false)" id="brand-btn-inconsistent" class="px-3 py-1.5 rounded-md font-semibold text-white/50">Tidak Konsisten</button>
+                </div>
+              </div>
+              <div id="brand-cards-preview" class="grid grid-cols-1 sm:grid-cols-3 gap-3"></div>
+              <p id="brand-consistency-note" class="text-xs text-white/50"></p>
+            </div>
+          </div>
+
+          <!-- HALAMAN 5: Latihan -->
+          <div class="book-page" data-page="5">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">✏️ Latihan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed mb-3">Kembali ke halaman "Coba", klik semua 5 jenis logo satu per satu. Kira-kira, kalau kamu bikin logo sendiri, jenis apa yang paling cocok untukmu?</p>
+            <button onclick="showBookPage(5,4)" class="px-4 py-2 rounded-lg text-xs font-bold bg-paper hover:bg-ink/10 text-ink/70">⬅ Kembali ke Coba</button>
+          </div>
+
+          <!-- HALAMAN 6: Uji Dirimu -->
+          <div class="book-page" data-page="6">
+            <div id="quiz-wrap-5"></div>
+          </div>
+
+          <!-- HALAMAN 7: Ayo Berkarya -->
+          <div class="book-page" data-page="7">
+            <div class="bg-ink rounded-2xl p-6 text-white flex flex-col sm:flex-row items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-signal-500 flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-flask"></i></div>
+              <div class="flex-1"><h3 class="font-heading font-bold text-lg">🎨 Ayo Berkarya!</h3><p class="text-xs text-white/50 mt-1">Buat logo minimalis untuk brand khayalanmu sendiri di Lab Desain.</p></div>
+              <button onclick="switchTab('studio'); loadTemplate('logo');" class="shrink-0 bg-signal-500 hover:bg-signal-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm">Buka Lab Desain &rarr;</button>
+            </div>
+          </div>
+
+          <!-- HALAMAN 8: Aku Sudah Bisa -->
+          <div class="book-page" data-page="8">
+            <h3 class="font-heading font-bold text-ink text-lg mb-3">🏆 Aku Sudah Bisa!</h3>
+            <div class="space-y-2 mb-4">
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Mengenali 5 jenis logo (wordmark, lettermark, dll)</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Memahami pentingnya konsistensi brand</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Membuat logo sederhana</div>
+            </div>
+            <div id="complete-wrap-5"></div>
+          </div>
+
+          <!-- NAVIGASI HALAMAN -->
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-ink/10">
+            <button onclick="prevBookPage(5)" id="book-prev-5" disabled class="w-10 h-10 rounded-full bg-paper hover:bg-ink/10 text-ink/60 flex items-center justify-center disabled:opacity-30 transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="flex flex-col items-center gap-1.5">
+              <span id="book-page-label-5" class="text-xs font-bold text-ink/50">Halaman 1 / 8</span>
+              <div id="book-dots-5" class="flex gap-1.5"><span class="book-dot active"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span></div>
+            </div>
+            <button onclick="nextBookPage(5)" id="book-next-5" class="w-10 h-10 rounded-full bg-signal-500 hover:bg-signal-600 text-white flex items-center justify-center transition-colors"><i class="fa-solid fa-arrow-right"></i></button>
+          </div>
         </div>
       </div>
 
       <!-- MODULE 6 -->
-      <div id="module-content-6" class="module-body hidden space-y-6">
+      <div id="module-content-6" class="module-body hidden space-y-4">
         <div class="bg-white rounded-2xl border border-ink/10 p-6 space-y-4">
           <div class="flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-tealc-100 text-tealc-600 flex items-center justify-center text-sm">6</span> Desain untuk Media Sosial</h2>
+            <button onclick="backToTOC()" class="text-xs text-ink/40 hover:text-ink flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Daftar Isi</button>
             <button onclick="speakModule(6)" class="text-xs font-bold text-ink/50 bg-paper hover:bg-ink/10 px-3 py-1.5 rounded-full flex items-center gap-1.5"><i class="fa-solid fa-volume-high"></i> Dengarkan</button>
           </div>
-          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba di bawah!</span><button onclick="document.getElementById('sim-module-6').scrollIntoView({behavior:'smooth'})" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
+          <h2 class="text-2xl font-heading font-bold text-ink flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-tealc-100 text-tealc-600 flex items-center justify-center text-sm">6</span> Desain untuk Media Sosial</h2>
+
+          <div class="abk-praktik-banner items-center justify-between gap-2 p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-semibold text-purple-700"><span>🎮 Mode Praktik aktif — langsung coba aktivitasnya!</span><button onclick="showBookPage(6,4)" class="bg-purple-600 text-white px-3 py-1.5 rounded-lg">Lompat ke Aktivitas</button></div>
           <div class="abk-active-banner baca-banner items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-700"><span>📖 Mode Baca aktif — penjelasan disingkat & tulisan diperbesar.</span></div>
           <div class="abk-active-banner visual-banner items-center gap-2 p-3 bg-pink-50 border border-pink-200 rounded-xl text-xs font-semibold text-pink-700"><span>👀 Mode Visual aktif — fokus ke ikon, teks penjelasan disembunyikan.</span></div>
-          <p class="abk-detail text-sm text-ink/60 leading-relaxed">Setiap platform punya ukuran &amp; area aman berbeda. Elemen penting (teks, wajah, logo) harus diletakkan jauh dari tepi agar tidak terpotong atau tertutup tombol aplikasi.</p>
-          <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-tealc-50 p-3 rounded-xl">📖 Jangan taruh tulisan penting terlalu dekat tepi gambar, nanti bisa terpotong atau ketutupan tombol.</p>
 
-          <div id="sim-module-6" class="bg-ink rounded-2xl p-6 text-white space-y-4">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-              <h3 class="font-heading font-bold text-tealc-400 flex items-center gap-2 text-base"><i class="fa-solid fa-crop-simple"></i> Simulator: Format &amp; Area Aman</h3>
-              <div class="flex bg-white/5 rounded-lg p-1 text-xs">
-                <button onclick="setSocialFormat('feed')" id="social-btn-feed" class="px-3 py-1.5 rounded-md font-semibold bg-tealc-500 text-white">Post Feed (1:1)</button>
-                <button onclick="setSocialFormat('story')" id="social-btn-story" class="px-3 py-1.5 rounded-md font-semibold text-white/50">Story (9:16)</button>
-              </div>
-            </div>
-            <div class="flex justify-center">
-              <div id="social-frame" class="relative bg-white/5 border-2 border-white/10 overflow-hidden transition-all" style="width:260px;height:260px;">
-                <div id="social-safe-zone" class="absolute border-2 border-dashed border-tealc-400/70 pointer-events-none" style="inset:10%;"></div>
-                <div class="absolute inset-0 flex items-center justify-center p-4">
-                  <div class="text-center space-y-2">
-                    <div class="w-10 h-10 mx-auto rounded-full bg-tealc-400"></div>
-                    <p class="text-xs font-bold">Judul Konten Utama</p>
-                    <p class="text-[10px] text-white/40">Teks & logo aman di dalam garis putus-putus</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p id="social-format-note" class="text-xs text-white/50 text-center max-w-md mx-auto">Post Feed Instagram memakai rasio 1:1 (persegi) — elemen penting cukup aman selama tidak menempel tepi gambar.</p>
+          <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+            <div class="w-10 h-10 rounded-full bg-amber-400 flex items-center justify-center text-xl shrink-0">🦉</div>
+            <p class="text-xs font-medium text-amber-800" id="deka-text-6">Hai! Aku Deka 👋 Yuk kenalan dulu sama materinya!</p>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-images text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Post Feed (1:1 / 4:5)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Dilihat sekilas saat scroll — judul & fokus utama harus langsung terlihat jelas.</p></div>
-            <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-mobile-screen-button text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Story (9:16)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Bagian atas & bawah sering tertutup nama akun dan tombol balas — hindari taruh info penting di situ.</p></div>
+          <!-- HALAMAN 1: Yuk Kenalan -->
+          <div class="book-page active" data-page="1">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">👋 Yuk Kenalan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed">Ini bab terakhir! Sekarang saatnya belajar bikin desain khusus untuk Instagram, WhatsApp Story, dan media sosial lainnya — biar tulisanmu nggak kepotong atau ketutupan tombol.</p>
           </div>
 
-          <div class="pt-2 border-t border-ink/10">
-            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-tealc-500"></i> Contoh Nyata: Desain Post Promo yang Tepat</h3>
+          <!-- HALAMAN 2: Lihat -->
+          <div class="book-page" data-page="2">
+            <h3 class="font-bold text-ink text-base mb-3 flex items-center gap-2"><i class="fa-solid fa-image text-tealc-500"></i> 👀 Lihat: Post Promo</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="rounded-xl overflow-hidden border-2 border-emerald-300">
                 <div class="bg-white p-5 space-y-3" style="aspect-ratio:1/1">
@@ -843,7 +1145,84 @@
             </div>
           </div>
 
-          <div id="quiz-wrap-6" class="pt-2 border-t border-ink/10"></div>
+          <!-- HALAMAN 3: Tahukah Kamu -->
+          <div class="book-page" data-page="3">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">💡 Tahukah Kamu?</h3>
+            <p class="abk-detail text-sm text-ink/60 leading-relaxed">Setiap platform punya ukuran &amp; area aman berbeda. Elemen penting (teks, wajah, logo) harus diletakkan jauh dari tepi agar tidak terpotong atau tertutup tombol aplikasi.</p>
+            <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-tealc-50 p-3 rounded-xl">📖 Jangan taruh tulisan penting terlalu dekat tepi gambar, nanti bisa terpotong atau ketutupan tombol.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-images text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Post Feed (1:1 / 4:5)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Dilihat sekilas saat scroll — judul & fokus utama harus langsung terlihat jelas.</p></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-mobile-screen-button text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Story (9:16)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Bagian atas & bawah sering tertutup nama akun dan tombol balas — hindari taruh info penting di situ.</p></div>
+            </div>
+          </div>
+
+          <!-- HALAMAN 4: Coba -->
+          <div class="book-page" data-page="4">
+            <div id="sim-module-6" class="bg-ink rounded-2xl p-6 text-white space-y-4">
+              <div class="flex items-center justify-between flex-wrap gap-2">
+                <h3 class="font-heading font-bold text-tealc-400 flex items-center gap-2 text-base"><i class="fa-solid fa-crop-simple"></i> Simulator: Format &amp; Area Aman</h3>
+                <div class="flex bg-white/5 rounded-lg p-1 text-xs">
+                  <button onclick="setSocialFormat('feed')" id="social-btn-feed" class="px-3 py-1.5 rounded-md font-semibold bg-tealc-500 text-white">Post Feed (1:1)</button>
+                  <button onclick="setSocialFormat('story')" id="social-btn-story" class="px-3 py-1.5 rounded-md font-semibold text-white/50">Story (9:16)</button>
+                </div>
+              </div>
+              <div class="flex justify-center">
+                <div id="social-frame" class="relative bg-white/5 border-2 border-white/10 overflow-hidden transition-all" style="width:260px;height:260px;">
+                  <div id="social-safe-zone" class="absolute border-2 border-dashed border-tealc-400/70 pointer-events-none" style="inset:10%;"></div>
+                  <div class="absolute inset-0 flex items-center justify-center p-4">
+                    <div class="text-center space-y-2">
+                      <div class="w-10 h-10 mx-auto rounded-full bg-tealc-400"></div>
+                      <p class="text-xs font-bold">Judul Konten Utama</p>
+                      <p class="text-[10px] text-white/40">Teks & logo aman di dalam garis putus-putus</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p id="social-format-note" class="text-xs text-white/50 text-center max-w-md mx-auto">Post Feed Instagram memakai rasio 1:1 (persegi) — elemen penting cukup aman selama tidak menempel tepi gambar.</p>
+            </div>
+          </div>
+
+          <!-- HALAMAN 5: Latihan -->
+          <div class="book-page" data-page="5">
+            <h3 class="font-heading font-bold text-ink text-lg mb-2">✏️ Latihan</h3>
+            <p class="text-sm text-ink/60 leading-relaxed mb-3">Kembali ke halaman "Coba", pindah dari Post Feed ke Story. Apa yang berubah dari bentuk area amannya? Kenapa menurutmu itu penting?</p>
+            <button onclick="showBookPage(6,4)" class="px-4 py-2 rounded-lg text-xs font-bold bg-paper hover:bg-ink/10 text-ink/70">⬅ Kembali ke Coba</button>
+          </div>
+
+          <!-- HALAMAN 6: Uji Dirimu -->
+          <div class="book-page" data-page="6">
+            <div id="quiz-wrap-6"></div>
+          </div>
+
+          <!-- HALAMAN 7: Ayo Berkarya -->
+          <div class="book-page" data-page="7">
+            <div class="bg-ink rounded-2xl p-6 text-white flex flex-col sm:flex-row items-center gap-4">
+              <div class="w-14 h-14 rounded-2xl bg-signal-500 flex items-center justify-center text-2xl shrink-0"><i class="fa-solid fa-flask"></i></div>
+              <div class="flex-1"><h3 class="font-heading font-bold text-lg">🎨 Ayo Berkarya!</h3><p class="text-xs text-white/50 mt-1">Buat post Instagram promo dengan elemen aman dari tepi di Lab Desain.</p></div>
+              <button onclick="switchTab('studio'); loadTemplate('instagram');" class="shrink-0 bg-signal-500 hover:bg-signal-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm">Buka Lab Desain &rarr;</button>
+            </div>
+          </div>
+
+          <!-- HALAMAN 8: Aku Sudah Bisa -->
+          <div class="book-page" data-page="8">
+            <h3 class="font-heading font-bold text-ink text-lg mb-3">🏆 Aku Sudah Bisa!</h3>
+            <div class="space-y-2 mb-4">
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Membedakan format Post Feed &amp; Story</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Memahami area aman (safe zone)</div>
+              <div class="flex items-center gap-2 text-sm text-ink/70"><i class="fa-solid fa-circle-check text-emerald-500"></i> Membuat post media sosial yang efektif</div>
+            </div>
+            <div id="complete-wrap-6"></div>
+          </div>
+
+          <!-- NAVIGASI HALAMAN -->
+          <div class="flex items-center justify-between gap-2 pt-3 border-t border-ink/10">
+            <button onclick="prevBookPage(6)" id="book-prev-6" disabled class="w-10 h-10 rounded-full bg-paper hover:bg-ink/10 text-ink/60 flex items-center justify-center disabled:opacity-30 transition-colors"><i class="fa-solid fa-arrow-left"></i></button>
+            <div class="flex flex-col items-center gap-1.5">
+              <span id="book-page-label-6" class="text-xs font-bold text-ink/50">Halaman 1 / 8</span>
+              <div id="book-dots-6" class="flex gap-1.5"><span class="book-dot active"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span><span class="book-dot"></span></div>
+            </div>
+            <button onclick="nextBookPage(6)" id="book-next-6" class="w-10 h-10 rounded-full bg-signal-500 hover:bg-signal-600 text-white flex items-center justify-center transition-colors"><i class="fa-solid fa-arrow-right"></i></button>
+          </div>
         </div>
       </div>
     </section>
@@ -1085,13 +1464,12 @@
 <script>
 /* ================= FIREBASE CONFIG — GANTI DENGAN MILIK ANDA ================= */
 const FIREBASE_CONFIG = {
-   apiKey: "AIzaSyCTCtDYLEh4scnKTaD4DNkltwtKekC8HfY",
-  authDomain: "design-craft-studio.firebaseapp.com",
-  projectId: "design-craft-studio",
-  storageBucket: "design-craft-studio.firebasestorage.app",
-  messagingSenderId: "894884224993",
-  appId: "1:894884224993:web:53c5fd30e8f72ba4b6fca0",
-  measurementId: "G-X3Y0J4RFL2"
+  apiKey: "ISI_API_KEY_ANDA",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  storageBucket: "ISI_PROJECT_ID.appspot.com",
+  messagingSenderId: "ISI_SENDER_ID",
+  appId: "ISI_APP_ID"
 };
 const ADMIN_CODE = "TOMPOKERSAN2026"; // Ganti dengan kode rahasia Anda sendiri
 const EMAIL_DOMAIN = "designcraft.local";
@@ -1438,7 +1816,7 @@ function openModule(moduleNum){
   if (activeTabBtn) { activeTabBtn.classList.add('text-signal-600','bg-signal-50'); activeTabBtn.classList.remove('text-ink/60'); }
 
   if (moduleNum === 2) setTimeout(drawColorWheel, 100);
-  if (currentUserData && currentUserData.abkMode && currentUserData.abkMode.audio) speakModule(moduleNum);
+  showBookPage(moduleNum, 1);
 
   if (currentUserData && currentUserData.lastModule !== moduleNum) {
     currentUserData.lastModule = moduleNum;
@@ -1460,6 +1838,54 @@ function updateDashboardModuleStatus(){
   }
 }
 
+/* ---------------- MESIN BUKU DIGITAL (halaman per bab) ---------------- */
+const DEKA_LINES = {
+  1: 'Hai! Aku Deka 👋 Yuk kenalan dulu sama materinya!',
+  2: 'Lihat baik-baik ya, mana yang lebih enak dipandang?',
+  3: 'Nah, ini dia konsep pentingnya. Simak pelan-pelan!',
+  4: 'Sekarang coba sendiri! Klik-klik aja, nggak akan salah kok.',
+  5: 'Yuk latihan dulu sebelum lanjut ke uji dirimu!',
+  6: 'Waktunya uji pemahamanmu. Semangat! 💪',
+  7: 'Saatnya berkarya! Ayo buat sesuatu yang keren.',
+  8: 'Keren! Kamu sudah bisa. Lanjut ke bab berikutnya yuk! 🎉'
+};
+let bookPageState = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1 };
+
+function showBookPage(m, page){
+  page = Math.max(1, Math.min(8, page));
+  bookPageState[m] = page;
+  document.querySelectorAll('#module-content-' + m + ' .book-page').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.page) === page);
+  });
+  const label = document.getElementById('book-page-label-' + m);
+  if (label) label.innerText = 'Halaman ' + page + ' / 8';
+  const dotsWrap = document.getElementById('book-dots-' + m);
+  if (dotsWrap) {
+    Array.from(dotsWrap.children).forEach((dot, i) => dot.classList.toggle('active', i + 1 === page));
+  }
+  const prevBtn = document.getElementById('book-prev-' + m);
+  if (prevBtn) { prevBtn.disabled = (page === 1); prevBtn.classList.toggle('opacity-30', page === 1); }
+  const nextBtn = document.getElementById('book-next-' + m);
+  if (nextBtn) nextBtn.classList.toggle('invisible', page === 8);
+  const dekaText = document.getElementById('deka-text-' + m);
+  if (dekaText) dekaText.innerText = DEKA_LINES[page] || '';
+
+  const moduleCard = document.getElementById('module-content-' + m);
+  if (moduleCard) moduleCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  if (currentUserData && currentUserData.abkMode && currentUserData.abkMode.audio) {
+    const textToSpeak = (page === 3 && MODULE_AUDIO_TEXT[m]) ? MODULE_AUDIO_TEXT[m] : (DEKA_LINES[page] || '');
+    speakText(textToSpeak);
+  }
+}
+function nextBookPage(m){ showBookPage(m, (bookPageState[m] || 1) + 1); }
+function prevBookPage(m){ showBookPage(m, (bookPageState[m] || 1) - 1); }
+function backToTOC(){
+  switchTab('modules');
+  const toc = document.getElementById('modules-toc');
+  if (toc) toc.scrollIntoView({ behavior: 'smooth' });
+}
+
 /* ---------------- QUIZ ---------------- */
 function renderAllQuizzes(){
   for (let m = 1; m <= 6; m++) renderQuizForModule(m);
@@ -1470,11 +1896,10 @@ function renderQuizForModule(m){
   if (!wrap) return;
   const questions = QUIZ_BANK[m];
   const answeredForModule = currentUserData.quizAnswers.filter(a => a.module === m);
-  const isCompleted = currentUserData.completedModules.includes(m);
   const totalPossibleXp = questions.reduce((s, q) => s + q.xp, 0);
 
   const hasAnyAnswer = answeredForModule.length > 0;
-  let html = '<div class="flex items-center justify-between flex-wrap gap-2 mb-3"><h3 class="font-bold text-ink text-base flex items-center gap-2"><i class="fa-solid fa-circle-question text-signal-500"></i> Kuis Cepat Modul ' + m + '</h3><div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-ink/40 bg-paper px-2.5 py-1 rounded-full">Total tersedia: ' + totalPossibleXp + ' XP</span>' + (hasAnyAnswer ? '<button onclick="resetModuleQuiz(' + m + ')" class="text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-full flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Ulangi dari Awal</button>' : '') + '</div></div><div class="space-y-4">';
+  let html = '<div class="flex items-center justify-between flex-wrap gap-2 mb-3"><h3 class="font-bold text-ink text-base flex items-center gap-2"><i class="fa-solid fa-circle-question text-signal-500"></i> Uji Dirimu</h3><div class="flex items-center gap-2"><span class="text-[11px] font-semibold text-ink/40 bg-paper px-2.5 py-1 rounded-full">Total tersedia: ' + totalPossibleXp + ' XP</span>' + (hasAnyAnswer ? '<button onclick="resetModuleQuiz(' + m + ')" class="text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-full flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> Ulangi dari Awal</button>' : '') + '</div></div><div class="space-y-4">';
 
   questions.forEach((item, qIdx) => {
     const prevAnswer = answeredForModule.find(a => a.qIndex === qIdx);
@@ -1500,20 +1925,36 @@ function renderQuizForModule(m){
   });
 
   html += '</div>';
+  wrap.innerHTML = html;
+  renderModuleCompletion(m);
+}
+
+function renderModuleCompletion(m){
+  const wrap = document.getElementById('complete-wrap-' + m);
+  if (!wrap) return;
+  const questions = QUIZ_BANK[m];
+  const answeredForModule = currentUserData.quizAnswers.filter(a => a.module === m);
+  const isCompleted = currentUserData.completedModules.includes(m);
+  let html = '';
 
   if (!isCompleted) {
     const allAnswered = answeredForModule.length >= questions.length;
-    html += '<button onclick="completeModule(' + m + ')" ' + (allAnswered ? '' : 'disabled') + ' class="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-bold transition-colors ' + (allAnswered ? 'bg-ink text-white hover:bg-ink/90 cursor-pointer' : 'bg-ink/10 text-ink/30 cursor-not-allowed') + '">' + (allAnswered ? 'Tandai Modul Ini Selesai (+20 XP Bonus)' : 'Jawab semua soal untuk menyelesaikan modul') + '</button>';
+    if (allAnswered) {
+      html += '<button onclick="completeModule(' + m + ')" class="w-full sm:w-auto px-5 py-3 rounded-xl text-sm font-bold transition-colors bg-ink text-white hover:bg-ink/90 cursor-pointer flex items-center justify-center gap-2"><i class="fa-solid fa-circle-check"></i> Tandai Modul Ini Selesai (+20 XP Bonus)</button>';
+    } else {
+      html += '<div class="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center gap-2"><i class="fa-solid fa-circle-info"></i> Kerjakan dulu semua soal di halaman "Uji Dirimu" (halaman 6) untuk membuka tombol selesai.</div>';
+      html += '<button onclick="showBookPage(' + m + ',6)" class="mt-3 px-4 py-2 rounded-lg text-xs font-bold bg-paper hover:bg-ink/10 text-ink/70">⬅ Ke Halaman Uji Dirimu</button>';
+    }
   } else {
-    html += '<div class="mt-4 flex items-center gap-3 flex-wrap">';
+    html += '<div class="flex items-center gap-3 flex-wrap">';
     html += '<div class="inline-flex items-center gap-2 text-xs font-bold text-emerald-600 bg-emerald-50 px-3 py-2 rounded-lg"><i class="fa-solid fa-circle-check"></i> Modul ini sudah selesai</div>';
     if (m < 6) {
-      html += '<button onclick="openModule(' + (m + 1) + ')" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-ink text-white hover:bg-ink/90 transition-colors flex items-center gap-2">Lanjut ke Modul ' + (m + 1) + ': ' + MODULE_NAMES[m + 1] + ' <i class="fa-solid fa-arrow-right"></i></button>';
+      html += '<button onclick="openModule(' + (m + 1) + ')" class="px-5 py-2.5 rounded-xl text-xs font-bold bg-ink text-white hover:bg-ink/90 transition-colors flex items-center gap-2">Lanjut ke Buku ' + (m + 1) + ': ' + MODULE_NAMES[m + 1] + ' <i class="fa-solid fa-arrow-right"></i></button>';
     } else {
       html += '<div class="w-full bg-gradient-to-r from-emerald-50 to-tealc-50 border border-emerald-200 rounded-xl p-4 flex items-center gap-4 flex-wrap">';
       html += '<div class="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-trophy"></i></div>';
-      html += '<div class="flex-1 min-w-[180px]"><p class="font-bold text-emerald-700 text-sm">Semua 6 modul selesai! Kerja bagus 🎉</p><p class="text-xs text-emerald-600/70">Sekarang coba uji kejelianmu di Tantangan, atau praktikkan semuanya di Studio Desain.</p></div>';
-      html += '<div class="flex gap-2 flex-wrap"><button onclick="switchTab(\'challenges\')" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700">Coba Tantangan</button><button onclick="openModule(1)" class="px-4 py-2 rounded-lg text-xs font-bold bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50">Belajar Lagi dari Modul 1</button></div>';
+      html += '<div class="flex-1 min-w-[180px]"><p class="font-bold text-emerald-700 text-sm">Semua 6 buku selesai! Kerja bagus 🎉</p><p class="text-xs text-emerald-600/70">Sekarang coba uji kejelianmu di Tantangan, atau praktikkan semuanya di Lab Desain.</p></div>';
+      html += '<div class="flex gap-2 flex-wrap"><button onclick="switchTab(\'challenges\')" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700">Coba Tantangan</button><button onclick="openModule(1)" class="px-4 py-2 rounded-lg text-xs font-bold bg-white border border-emerald-300 text-emerald-700 hover:bg-emerald-50">Belajar Lagi dari Buku 1</button></div>';
       html += '</div>';
     }
     html += '</div>';
