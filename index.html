@@ -45,7 +45,7 @@
        }
      }
   8. (Opsional) Mode Bahasa Isyarat: kalau ada guru/pendamping yang bisa
-     BISINDO dan mau merekam video penjelasan tiap Buku, unggah videonya
+     SIBI dan mau merekam video penjelasan tiap Buku, unggah videonya
      ke YouTube (bisa "Unlisted" biar tidak publik), lalu:
      - Klik Share > Embed di video tersebut
      - Salin HANYA bagian src="..." dari kode yang muncul
@@ -72,7 +72,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&family=Anton&family=Pacifico&family=Bebas+Neue&display=swap" rel="stylesheet">
 
 <script>
   tailwind.config = {
@@ -81,6 +81,10 @@
         fontFamily: {
           sans: ['Inter', 'sans-serif'],
           heading: ['Space Grotesk', 'sans-serif'],
+          poppins: ['Poppins', 'sans-serif'],
+          anton: ['Anton', 'sans-serif'],
+          pacifico: ['Pacifico', 'cursive'],
+          bebas: ['Bebas Neue', 'sans-serif'],
         },
         colors: {
           ink: '#15171C',
@@ -285,8 +289,8 @@
       <nav class="space-y-1">
         <button onclick="switchTab('dashboard')" id="nav-dashboard" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-house w-4"></i> Beranda</button>
         <button onclick="switchTab('modules')" id="nav-modules" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-book-open w-4"></i> Modul Belajar</button>
-        <button onclick="switchTab('studio')" id="nav-studio" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-pen-ruler w-4"></i> Studio Desain</button>
-        <button onclick="switchTab('challenges')" id="nav-challenges" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-trophy w-4"></i> Tantangan</button>
+        <button onclick="navGuarded('studio')" id="nav-studio" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-pen-ruler w-4"></i> Studio Desain</button>
+        <button onclick="navGuarded('challenges')" id="nav-challenges" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-trophy w-4"></i> Tantangan</button>
         <button onclick="switchTab('gallery')" id="nav-gallery" class="rail-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 transition-colors"><i class="fa-solid fa-images w-4"></i> Galeri Karya</button>
         <button onclick="openAbkModePanel()" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-purple-300 hover:bg-white/5 transition-colors"><i class="fa-solid fa-puzzle-piece w-4"></i> Mode ABK</button>
       </nav>
@@ -337,7 +341,7 @@
             <p class="text-white/50 text-sm leading-relaxed">Belajar, coba, latihan, tantangan, lalu berkarya — semua dalam satu buku digital interaktif.</p>
             <div class="pt-2 flex flex-wrap gap-3">
               <button id="hero-continue-btn" onclick="continueLearning()" class="bg-signal-500 hover:bg-signal-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2"><i class="fa-solid fa-play"></i> <span id="hero-continue-label">Lanjut Belajar</span></button>
-              <button onclick="switchTab('studio')" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-5 py-2.5 rounded-xl text-sm border border-white/15 transition-all"><i class="fa-solid fa-flask mr-1"></i> Buka Lab Desain</button>
+              <button onclick="navGuarded('studio')" class="bg-white/10 hover:bg-white/20 text-white font-semibold px-5 py-2.5 rounded-xl text-sm border border-white/15 transition-all"><i class="fa-solid fa-flask mr-1"></i> Buka Lab Desain</button>
             </div>
           </div>
           <div class="lg:col-span-5 bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
@@ -458,15 +462,9 @@
     <!-- TAB: MODULES -->
     <section id="tab-modules" class="tab-content hidden space-y-6">
       <div id="modules-toc" class="bg-white rounded-2xl border border-ink/10 p-4 space-y-3">
-        <h2 class="font-heading font-bold text-ink text-base flex items-center gap-2"><i class="fa-solid fa-book-open text-signal-500"></i> 📚 Buku Desain — Pilih Bab</h2>
-        <div class="flex flex-wrap gap-2">
-          <button onclick="openModule(1)" id="mod-tab-1" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-shapes mr-1.5"></i> 1. Elemen</button>
-          <button onclick="openModule(2)" id="mod-tab-2" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-palette mr-1.5"></i> 2. Warna</button>
-          <button onclick="openModule(3)" id="mod-tab-3" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-font mr-1.5"></i> 3. Tipografi</button>
-          <button onclick="openModule(4)" id="mod-tab-4" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-grip mr-1.5"></i> 4. Grid</button>
-          <button onclick="openModule(5)" id="mod-tab-5" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-gem mr-1.5"></i> 5. Branding</button>
-          <button onclick="openModule(6)" id="mod-tab-6" class="mod-tab-btn flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all text-ink/60"><i class="fa-solid fa-mobile-screen mr-1.5"></i> 6. Sosial Media</button>
-        </div>
+        <h2 class="font-heading font-bold text-ink text-base flex items-center gap-2"><i class="fa-solid fa-book-open text-signal-500"></i> 📚 Buku Desain — Belajar Berurutan</h2>
+        <p class="text-xs text-ink/40">Selesaikan tiap buku dulu sebelum lanjut ke buku berikutnya, ya!</p>
+        <div id="modules-toc-buttons" class="flex flex-wrap gap-2"></div>
       </div>
 
       <!-- MODULE 1 -->
@@ -528,6 +526,8 @@
               <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-eye text-blue-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Focal Point</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Elemen pertama yang dilihat mata saat menatap desain.</p><div class="sign-term-slot hidden" data-sign-term="Focal Point"></div></div>
               <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-circle-half-stroke text-purple-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Kontras Visual</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Perbedaan ukuran/warna untuk memisahkan info penting.</p><div class="sign-term-slot hidden" data-sign-term="Kontras"></div></div>
               <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-scale-balanced text-emerald-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Keseimbangan</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Simetris (seimbang) atau asimetris (dinamis).</p><div class="sign-term-slot hidden" data-sign-term="Keseimbangan"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-repeat text-amber-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Repetisi</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Mengulang warna/bentuk/font yang sama supaya desain terasa satu kesatuan.</p><div class="sign-term-slot hidden" data-sign-term="Repetisi"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-layer-group text-rose-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Kedekatan</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Elemen yang berkaitan diletakkan berdekatan supaya terlihat satu kelompok.</p><div class="sign-term-slot hidden" data-sign-term="Kedekatan"></div></div>
             </div>
           </div>
 
@@ -664,13 +664,19 @@
             <div id="sign-video-wrap-2" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Warna membangkitkan emosi dan mengarahkan perhatian. Kombinasi warna yang tepat memakai formula harmoni seperti <strong>Komplementer</strong>, <strong>Analogis</strong>, dan <strong>Triadik</strong>.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-purple-50 p-3 rounded-xl">📖 Warna bisa dipasangkan biar serasi. Coba klik roda warna di halaman "Coba" untuk lihat contohnya!</p>
+            <div class="p-4 bg-paper rounded-xl border border-ink/10 flex items-start gap-3">
+              <i class="fa-solid fa-temperature-half text-rose-500 text-xl mt-0.5 card-icon-visual"></i>
+              <div><h4 class="font-bold text-ink text-sm">Suhu Warna</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Warna <strong>hangat</strong> (merah, oranye, kuning) terasa energik & dekat. Warna <strong>dingin</strong> (biru, hijau, ungu) terasa tenang & jauh. Desainer memilih suhu warna sesuai suasana yang ingin disampaikan.</p></div>
+            </div>
             <div class="pt-3">
               <h4 class="font-bold text-ink text-sm mb-3">Psikologi Warna dalam Brand:</h4>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                 <div class="p-3 bg-red-50 border border-red-200 rounded-xl"><div class="font-bold text-red-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-red-500 card-dot-visual"></span>Merah</div><p class="text-ink/60 card-detail-text">Energi, Keberanian, Semangat.</p><div class="sign-term-slot hidden" data-sign-term="Merah"></div></div>
                 <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl"><div class="font-bold text-blue-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-blue-500 card-dot-visual"></span>Biru</div><p class="text-ink/60 card-detail-text">Kepercayaan, Profesional.</p><div class="sign-term-slot hidden" data-sign-term="Biru"></div></div>
                 <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl"><div class="font-bold text-emerald-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 card-dot-visual"></span>Hijau</div><p class="text-ink/60 card-detail-text">Kesehatan, Alam, Tumbuh.</p><div class="sign-term-slot hidden" data-sign-term="Hijau"></div></div>
                 <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl"><div class="font-bold text-amber-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-500 card-dot-visual"></span>Kuning</div><p class="text-ink/60 card-detail-text">Keceriaan, Optimisme.</p><div class="sign-term-slot hidden" data-sign-term="Kuning"></div></div>
+                <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl"><div class="font-bold text-purple-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-purple-500 card-dot-visual"></span>Ungu</div><p class="text-ink/60 card-detail-text">Kemewahan, Kreativitas, Misteri.</p><div class="sign-term-slot hidden" data-sign-term="Ungu"></div></div>
+                <div class="p-3 bg-orange-50 border border-orange-200 rounded-xl"><div class="font-bold text-orange-600 mb-1 flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-orange-500 card-dot-visual"></span>Oranye</div><p class="text-ink/60 card-detail-text">Energi, Keramahan, Percaya Diri.</p><div class="sign-term-slot hidden" data-sign-term="Oranye"></div></div>
               </div>
             </div>
           </div>
@@ -796,6 +802,11 @@
             <div id="sign-video-wrap-3" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Tipografi bukan hanya memilih jenis huruf, tapi mengatur jarak antar karakter (Kerning/Tracking), jarak antar baris (Leading), dan kesesuaian font dengan pesan.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-emerald-50 p-3 rounded-xl">📖 Huruf yang rapi jaraknya lebih enak dibaca. Coba geser tombol di halaman "Coba" untuk melihat bedanya!</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3">
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-sort-down text-emerald-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Hierarki Tipografi</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Ukuran font berbeda menunjukkan mana judul, subjudul, dan isi teks.</p><div class="sign-term-slot hidden" data-sign-term="Hierarki"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-align-left text-blue-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Alignment Teks</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Rata kiri paling nyaman dibaca untuk paragraf panjang.</p><div class="sign-term-slot hidden" data-sign-term="Alignment"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-font text-purple-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Font Pairing</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Padukan maksimal 2 jenis font supaya desain tidak terlihat ramai.</p><div class="sign-term-slot hidden" data-sign-term="Font Pairing"></div></div>
+            </div>
           </div>
 
           <!-- HALAMAN 4: Coba -->
@@ -926,6 +937,10 @@
             <div id="sign-video-wrap-4" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Rule of Thirds membimbing mata pemirsa menuju titik fokus alami. Garis grid menjaga elemen tetap rapi dan terstruktur.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-amber-50 p-3 rounded-xl">📖 Bagi gambar jadi 9 kotak. Taruh benda penting di garis potongnya, jangan di tengah-tengah terus.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-table-cells-large text-amber-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Grid Kolom</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Bagi halaman jadi beberapa kolom supaya elemen tersusun konsisten & rapi.</p><div class="sign-term-slot hidden" data-sign-term="Grid"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-align-center text-blue-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Alignment</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Meratakan elemen ke satu garis bikin desain terlihat rapi & profesional.</p><div class="sign-term-slot hidden" data-sign-term="Perataan"></div></div>
+            </div>
           </div>
 
           <!-- HALAMAN 4: Coba -->
@@ -1035,6 +1050,10 @@
             <div id="sign-video-wrap-5" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Logo adalah wajah sebuah brand. Ada beberapa jenis logo, dan yang tak kalah penting: brand yang kuat harus <strong>konsisten</strong> menjaga warna, font, dan gaya visualnya di semua media.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-rose-50 p-3 rounded-xl">📖 Logo adalah wajah sebuah brand/usaha. Pakai warna & gaya yang sama terus supaya orang mudah ingat.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-quote-left text-rose-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Tagline</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Kalimat pendek yang mewakili identitas & janji sebuah brand.</p><div class="sign-term-slot hidden" data-sign-term="Tagline"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-book text-rose-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Brand Guideline</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Aturan tertulis supaya semua orang di tim pakai warna & font yang sama.</p><div class="sign-term-slot hidden" data-sign-term="Panduan"></div></div>
+            </div>
           </div>
 
           <!-- HALAMAN 4: Coba -->
@@ -1174,9 +1193,10 @@
             <div id="sign-video-wrap-6" class="hidden mb-3"></div>
             <p class="abk-detail text-sm text-ink/60 leading-relaxed">Setiap platform punya ukuran &amp; area aman berbeda. Elemen penting (teks, wajah, logo) harus diletakkan jauh dari tepi agar tidak terpotong atau tertutup tombol aplikasi.</p>
             <p class="abk-simple text-sm text-ink/70 leading-relaxed bg-tealc-50 p-3 rounded-xl">📖 Jangan taruh tulisan penting terlalu dekat tepi gambar, nanti bisa terpotong atau ketutupan tombol.</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3">
               <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-images text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Post Feed (1:1 / 4:5)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Dilihat sekilas saat scroll — judul & fokus utama harus langsung terlihat jelas.</p><div class="sign-term-slot hidden" data-sign-term="Post"></div></div>
               <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-mobile-screen-button text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Story (9:16)</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Bagian atas & bawah sering tertutup nama akun dan tombol balas — hindari taruh info penting di situ.</p><div class="sign-term-slot hidden" data-sign-term="Story"></div></div>
+              <div class="p-4 bg-paper rounded-xl border border-ink/10"><i class="fa-solid fa-clone text-tealc-600 text-xl mb-2 card-icon-visual"></i><h4 class="font-bold text-ink text-sm">Carousel</h4><p class="text-xs text-ink/50 mt-1 card-detail-text">Postingan berisi beberapa slide yang bisa digeser — cocok untuk tutorial atau tips langkah demi langkah.</p><div class="sign-term-slot hidden" data-sign-term="Carousel"></div></div>
             </div>
           </div>
 
@@ -1314,6 +1334,16 @@
           <div id="no-selection-msg" class="text-center py-8 text-xs text-ink/40"><i class="fa-solid fa-hand-pointer text-2xl mb-2 text-ink/20 block"></i>Klik elemen di canvas untuk mengubah warna, ukuran, atau teks.</div>
           <div id="inspector-controls" class="space-y-4 hidden text-xs">
             <div id="prop-text-group"><label class="block font-semibold text-ink/70 mb-1">Isi Teks:</label><input type="text" id="prop-text-val" oninput="updateSelectedElement('text', this.value)" class="w-full bg-paper border border-ink/10 rounded-lg p-2 font-medium outline-none focus:border-signal-500"></div>
+            <div id="prop-font-group"><label class="block font-semibold text-ink/70 mb-1">Gaya Font:</label>
+              <select id="prop-font-val" onchange="updateSelectedElement('fontFamily', this.value)" class="w-full bg-paper border border-ink/10 rounded-lg p-2 font-medium outline-none focus:border-signal-500">
+                <option value="font-sans">Sans (Rapi)</option>
+                <option value="font-heading">Space Grotesk (Modern)</option>
+                <option value="font-poppins">Poppins (Bulat)</option>
+                <option value="font-anton">Anton (Tegas/Poster)</option>
+                <option value="font-bebas">Bebas Neue (Ramping)</option>
+                <option value="font-pacifico">Pacifico (Tulisan Tangan)</option>
+              </select>
+            </div>
             <div id="prop-icon-group">
               <label class="block font-semibold text-ink/70 mb-1">Pilih Ikon:</label>
               <div class="grid grid-cols-4 gap-1.5" id="icon-picker-grid"></div>
@@ -1382,8 +1412,8 @@
   <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-ink/10 flex justify-around py-2 z-40">
     <button onclick="switchTab('dashboard')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-house text-base"></i>Beranda</button>
     <button onclick="switchTab('modules')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-book-open text-base"></i>Modul</button>
-    <button onclick="switchTab('studio')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-pen-ruler text-base"></i>Studio</button>
-    <button onclick="switchTab('challenges')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-trophy text-base"></i>Tantangan</button>
+    <button onclick="navGuarded('studio')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-pen-ruler text-base"></i>Studio</button>
+    <button onclick="navGuarded('challenges')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-trophy text-base"></i>Tantangan</button>
     <button onclick="switchTab('gallery')" class="nav-btn-m flex flex-col items-center text-[10px] font-medium text-ink/50 p-1"><i class="fa-solid fa-images text-base"></i>Galeri</button>
   </nav>
 
@@ -1414,12 +1444,12 @@
           <div id="abk-toggle-praktik" onclick="toggleAbkMode('praktik')" class="abk-toggle-switch off"></div>
         </div>
         <div class="flex items-center justify-between gap-3 p-3 bg-paper rounded-xl">
-          <div><p class="font-bold text-sm text-ink">🤟 Mode Bahasa Isyarat</p><p class="text-[11px] text-ink/50">Tampilkan video BISINDO (jika sudah disediakan guru) di halaman materi.</p></div>
+          <div><p class="font-bold text-sm text-ink">🤟 Mode Bahasa Isyarat</p><p class="text-[11px] text-ink/50">Tampilkan video SIBI (jika sudah disediakan guru) di halaman materi.</p></div>
           <div id="abk-toggle-isyarat" onclick="toggleAbkMode('isyarat')" class="abk-toggle-switch off"></div>
         </div>
       </div>
 
-      <p class="text-[11px] text-ink/35 leading-relaxed">🤟 Catatan: video bahasa isyarat perlu direkam langsung oleh guru/pendamping yang bisa BISINDO — ini bukan animasi otomatis, supaya artinya tetap akurat dan tidak membingungkan.</p>
+      <p class="text-[11px] text-ink/35 leading-relaxed">🤟 Catatan: video bahasa isyarat perlu direkam langsung oleh guru/pendamping yang bisa SIBI — ini bukan animasi otomatis, supaya artinya tetap akurat dan tidak membingungkan.</p>
 
       <button onclick="closeAbkModePanel()" class="w-full py-2.5 rounded-xl text-sm font-bold bg-ink text-white hover:bg-ink/90">Selesai</button>
     </div>
@@ -1495,13 +1525,12 @@
 <script>
 /* ================= FIREBASE CONFIG — GANTI DENGAN MILIK ANDA ================= */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCTCtDYLEh4scnKTaD4DNkltwtKekC8HfY",
-  authDomain: "design-craft-studio.firebaseapp.com",
-  projectId: "design-craft-studio",
-  storageBucket: "design-craft-studio.firebasestorage.app",
-  messagingSenderId: "894884224993",
-  appId: "1:894884224993:web:53c5fd30e8f72ba4b6fca0",
-  measurementId: "G-X3Y0J4RFL2"
+  apiKey: "ISI_API_KEY_ANDA",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  storageBucket: "ISI_PROJECT_ID.appspot.com",
+  messagingSenderId: "ISI_SENDER_ID",
+  appId: "ISI_APP_ID"
 };
 const ADMIN_CODE = "TOMPOKERSAN2026"; // Ganti dengan kode rahasia Anda sendiri
 const EMAIL_DOMAIN = "designcraft.local";
@@ -1517,35 +1546,80 @@ const QUIZ_BANK = {
   1: [
     { q: "Elemen yang pertama kali dilihat mata pemirsa disebut?", opts: ["Kontras", "Focal Point", "Kerning", "Palet"], correct: 1, xp: 10 },
     { q: "Apa fungsi utama kontras dalam desain?", opts: ["Membuat desain lebih ramai", "Menyembunyikan elemen", "Memisahkan & menonjolkan elemen penting", "Mengganti warna latar"], correct: 2, xp: 15 },
-    { q: "Keseimbangan di mana elemen kiri & kanan sama disebut?", opts: ["Asimetris", "Simetris", "Radial", "Acak"], correct: 1, xp: 10 }
+    { q: "Keseimbangan di mana elemen kiri & kanan sama disebut?", opts: ["Asimetris", "Simetris", "Radial", "Acak"], correct: 1, xp: 10 },
+    { q: "Mengulang warna/bentuk/font yang sama di seluruh desain disebut?", opts: ["Repetisi", "Kontras", "Kedekatan", "Rotasi"], correct: 0, xp: 15 }
   ],
   2: [
     { q: "Warna yang berseberangan di roda warna disebut harmoni?", opts: ["Analogis", "Triadik", "Komplementer", "Monokromatik"], correct: 2, xp: 10 },
     { q: "Warna biru dalam psikologi brand sering diasosiasikan dengan?", opts: ["Energi & keberanian", "Kepercayaan & profesional", "Kesehatan & alam", "Keceriaan"], correct: 1, xp: 15 },
-    { q: "Skema warna dengan satu warna + variasi gelap-terang disebut?", opts: ["Triadik", "Analogis", "Komplementer", "Monokromatik"], correct: 3, xp: 10 }
+    { q: "Skema warna dengan satu warna + variasi gelap-terang disebut?", opts: ["Triadik", "Analogis", "Komplementer", "Monokromatik"], correct: 3, xp: 10 },
+    { q: "Merah, oranye, dan kuning termasuk kelompok warna apa?", opts: ["Warna dingin", "Warna hangat", "Warna netral", "Warna pastel"], correct: 1, xp: 15 }
   ],
   3: [
     { q: "Jarak antar baris teks disebut?", opts: ["Kerning", "Leading", "Tracking", "Alignment"], correct: 1, xp: 10 },
     { q: "Font berkait di ujung huruf (seperti Times New Roman) disebut?", opts: ["Sans-serif", "Serif", "Monospace", "Display"], correct: 1, xp: 10 },
-    { q: "Mengapa keterbacaan (legibility) itu penting?", opts: ["Agar terlihat ramai", "Agar mata tidak lelah membaca", "Agar warna menonjol", "Tidak penting"], correct: 1, xp: 15 }
+    { q: "Mengapa keterbacaan (legibility) itu penting?", opts: ["Agar terlihat ramai", "Agar mata tidak lelah membaca", "Agar warna menonjol", "Tidak penting"], correct: 1, xp: 15 },
+    { q: "Sebaiknya memadukan berapa jenis font dalam satu desain?", opts: ["1 saja", "Maksimal 2", "Sebanyak-banyaknya", "Minimal 5"], correct: 1, xp: 15 }
   ],
   4: [
     { q: "Aturan membagi bidang jadi 3x3 untuk titik fokus disebut?", opts: ["Rule of Thirds", "Golden Ratio", "Kerning Grid", "Framing"], correct: 0, xp: 10 },
     { q: "Ruang kosong di sekitar elemen desain disebut?", opts: ["Padding Visual", "Negative Space", "Margin Aktif", "Blank Zone"], correct: 1, xp: 10 },
-    { q: "Alignment (perataan) elemen penting untuk menciptakan?", opts: ["Efek acak", "Kerapian & keteraturan visual", "Warna kontras", "Ukuran besar"], correct: 1, xp: 15 }
+    { q: "Alignment (perataan) elemen penting untuk menciptakan?", opts: ["Efek acak", "Kerapian & keteraturan visual", "Warna kontras", "Ukuran besar"], correct: 1, xp: 15 },
+    { q: "Membagi halaman jadi beberapa kolom supaya elemen tersusun konsisten disebut?", opts: ["Grid Kolom", "Rule of Thirds", "Negative Space", "Kerning"], correct: 0, xp: 15 }
   ],
   5: [
     { q: "Logo berupa nama brand ditulis dengan gaya huruf khas disebut?", opts: ["Pictorial Mark", "Wordmark", "Abstract Mark", "Mascot Logo"], correct: 1, xp: 10 },
     { q: "Mengapa konsistensi warna & font penting dalam branding?", opts: ["Supaya terlihat mewah", "Membangun pengenalan (recognition) brand di mata audiens", "Agar biaya produksi murah", "Tidak ada alasan khusus"], correct: 1, xp: 20 },
-    { q: "Logo berbentuk gambar/ikon tanpa teks disebut?", opts: ["Wordmark", "Lettermark", "Pictorial Mark", "Combination Mark"], correct: 2, xp: 10 }
+    { q: "Logo berbentuk gambar/ikon tanpa teks disebut?", opts: ["Wordmark", "Lettermark", "Pictorial Mark", "Combination Mark"], correct: 2, xp: 10 },
+    { q: "Kalimat pendek yang mewakili identitas sebuah brand disebut?", opts: ["Tagline", "Wordmark", "Palet", "Kerning"], correct: 0, xp: 15 }
   ],
   6: [
     { q: "Rasio umum untuk post feed Instagram persegi adalah?", opts: ["16:9", "1:1", "9:16", "4:3"], correct: 1, xp: 10 },
     { q: "Rasio umum untuk Instagram/WhatsApp Story adalah?", opts: ["1:1", "4:3", "9:16", "3:2"], correct: 2, xp: 10 },
-    { q: "Kenapa elemen penting sebaiknya dijauhkan dari tepi desain story/feed?", opts: ["Supaya lebih ramai", "Karena bisa terpotong crop otomatis platform atau tertutup tombol UI", "Tidak ada alasan khusus", "Supaya ukuran file kecil"], correct: 1, xp: 20 }
+    { q: "Kenapa elemen penting sebaiknya dijauhkan dari tepi desain story/feed?", opts: ["Supaya lebih ramai", "Karena bisa terpotong crop otomatis platform atau tertutup tombol UI", "Tidak ada alasan khusus", "Supaya ukuran file kecil"], correct: 1, xp: 20 },
+    { q: "Postingan berisi beberapa slide yang bisa digeser disebut?", opts: ["Story", "Carousel", "Reels", "Live"], correct: 1, xp: 15 }
   ]
 };
 const MODULE_NAMES = { 1: "Elemen & Hirarki", 2: "Teori Warna", 3: "Tipografi", 4: "Layout & Grid", 5: "Branding & Logo", 6: "Desain Media Sosial" };
+const MODULE_META = {
+  1: { icon: 'fa-shapes', week: '🌱 Tahap Dasar' },
+  2: { icon: 'fa-palette', week: '🌱 Tahap Dasar' },
+  3: { icon: 'fa-font', week: '🌿 Tahap Menengah' },
+  4: { icon: 'fa-grip', week: '🌿 Tahap Menengah' },
+  5: { icon: 'fa-gem', week: '🌳 Tahap Lanjutan' },
+  6: { icon: 'fa-mobile-screen', week: '🌳 Tahap Lanjutan' }
+};
+
+function isModuleUnlocked(m){
+  if (m <= 1) return true;
+  return currentUserData.completedModules.includes(m - 1);
+}
+
+function renderModulesTOC(){
+  const wrap = document.getElementById('modules-toc-buttons');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  for (let m = 1; m <= 6; m++) {
+    const unlocked = isModuleUnlocked(m);
+    const done = currentUserData.completedModules.includes(m);
+    const btn = document.createElement('button');
+    btn.id = 'mod-tab-' + m;
+    btn.className = 'mod-tab-btn flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-semibold transition-all text-left ' + (unlocked ? 'text-ink/60' : 'text-ink/25 bg-paper cursor-not-allowed');
+    btn.innerHTML =
+      '<div class="flex items-center gap-1.5">' + (unlocked ? '<i class="fa-solid ' + MODULE_META[m].icon + '"></i>' : '<i class="fa-solid fa-lock"></i>') + '<span>' + m + '. ' + MODULE_NAMES[m].split(' ')[0] + '</span>' + (done ? ' <i class="fa-solid fa-circle-check text-emerald-500"></i>' : '') + '</div>' +
+      '<div class="text-[9px] font-normal ' + (unlocked ? 'text-ink/30' : 'text-ink/20') + ' mt-0.5">' + MODULE_META[m].week + '</div>';
+    btn.onclick = unlocked ? () => openModule(m) : () => alert('Selesaikan Buku ' + (m - 1) + ' dulu untuk membuka Buku ' + m + ' ya! 😊');
+    wrap.appendChild(btn);
+  }
+}
+
+function navGuarded(tab){
+  if ((tab === 'studio' || tab === 'challenges') && currentUserData.completedModules.length < 6) {
+    alert((tab === 'studio' ? 'Lab Desain bebas' : 'Tantangan') + ' baru bisa dibuka lewat sidebar setelah semua 6 Buku selesai. Tapi tenang — kamu tetap bisa praktik langsung dari tombol "Ayo Berkarya" di tiap buku yang sedang kamu pelajari!');
+    return;
+  }
+  switchTab(tab);
+}
 
 function defaultUserData(){
   return { xp: 0, completedModules: [], quizAnswers: [], challengeAnswers: [], gallery: [], dragGameDone: false, abkMode: { baca: false, visual: false, audio: false, praktik: false, isyarat: false }, lastModule: 0, certificateEarned: false };
@@ -1805,6 +1879,7 @@ let currentHarmony = 'complementary';
 
 function initStudentApp(){
   refreshHeaderStats();
+  renderModulesTOC();
   renderAllQuizzes();
   renderGallery();
   updateDashboardModuleStatus();
@@ -1840,6 +1915,11 @@ function switchTab(tabName){
 }
 
 function openModule(moduleNum){
+  if (!isModuleUnlocked(moduleNum)) {
+    alert('Selesaikan Buku ' + (moduleNum - 1) + ' dulu untuk membuka Buku ' + moduleNum + ' ya! 😊');
+    switchTab('modules');
+    return;
+  }
   switchTab('modules');
   document.querySelectorAll('.module-body').forEach(el => el.classList.add('hidden'));
   document.querySelectorAll('.mod-tab-btn').forEach(btn => { btn.classList.remove('text-signal-600','bg-signal-50'); btn.classList.add('text-ink/60'); });
@@ -2120,6 +2200,7 @@ function completeModule(m){
   refreshHeaderStats();
   updateDashboardModuleStatus();
   renderQuizForModule(m);
+  renderModulesTOC();
   saveUserData();
 }
 
@@ -2137,6 +2218,7 @@ function resetModuleQuiz(m){
   refreshHeaderStats();
   updateDashboardModuleStatus();
   renderQuizForModule(m);
+  renderModulesTOC();
   saveUserData();
 }
 
@@ -2477,10 +2559,10 @@ function toggleAbkMode(key){
   saveUserData();
 }
 
-/* ---------------- MODE BAHASA ISYARAT (BISINDO) ---------------- */
+/* ---------------- MODE BAHASA ISYARAT (SIBI) ---------------- */
 /* Isi dengan link "embed" video YouTube per Buku (Share > Embed > salin src URL-nya saja),
    atau biarkan '' kalau videonya belum ada. Video sebaiknya direkam oleh guru/pendamping
-   yang bisa BISINDO, supaya artinya akurat. Lihat komentar CARA SETUP di paling atas file. */
+   yang bisa SIBI, supaya artinya akurat. Lihat komentar CARA SETUP di paling atas file. */
 const SIGN_LANGUAGE_VIDEOS = {
   1: '', 2: '', 3: '', 4: '', 5: '', 6: ''
 };
@@ -2494,7 +2576,7 @@ function updateSignLanguageUI(){
     wrap.classList.remove('hidden');
     const url = SIGN_LANGUAGE_VIDEOS[m];
     if (url) {
-      wrap.innerHTML = '<div class="aspect-video w-full rounded-xl overflow-hidden border border-indigo-200"><iframe src="' + url + '" class="w-full h-full" allow="autoplay; encrypted-media" allowfullscreen></iframe></div><p class="text-[11px] text-indigo-600 mt-1.5 flex items-center gap-1"><i class="fa-solid fa-hands"></i> Video penjelasan dalam Bahasa Isyarat (BISINDO)</p>';
+      wrap.innerHTML = '<div class="aspect-video w-full rounded-xl overflow-hidden border border-indigo-200"><iframe src="' + url + '" class="w-full h-full" allow="autoplay; encrypted-media" allowfullscreen></iframe></div><p class="text-[11px] text-indigo-600 mt-1.5 flex items-center gap-1"><i class="fa-solid fa-hands"></i> Video penjelasan dalam Bahasa Isyarat (SIBI)</p>';
     } else {
       wrap.innerHTML = '<div class="bg-indigo-50 border-2 border-dashed border-indigo-200 rounded-xl p-4 text-center text-xs text-indigo-600"><i class="fa-solid fa-hands text-lg mb-1.5 block"></i>Video bahasa isyarat untuk bab ini belum tersedia.<br>Admin bisa menambahkannya lewat pengaturan <span class="font-mono bg-white px-1 rounded">SIGN_LANGUAGE_VIDEOS</span> di kode.</div>';
     }
@@ -2804,11 +2886,74 @@ function renderCanvas(){
 
 function updateSelectionRing(){
   document.querySelectorAll('#canvas-layers > .canvas-el').forEach(node => {
-    node.classList.toggle('ring-2', node.id === selectedElementId);
-    node.classList.toggle('ring-signal-500', node.id === selectedElementId);
-    node.classList.toggle('ring-offset-2', node.id === selectedElementId);
+    const isSelected = node.id === selectedElementId;
+    node.classList.toggle('ring-2', isSelected);
+    node.classList.toggle('ring-signal-500', isSelected);
+    node.classList.toggle('ring-offset-2', isSelected);
+    if (isSelected) {
+      const el = canvasElements.find(e => e.id === selectedElementId);
+      if (el) attachResizeHandles(node, el);
+    } else {
+      removeResizeHandles(node);
+    }
   });
 }
+
+function removeResizeHandles(item){
+  item.querySelectorAll('.resize-handle').forEach(h => h.remove());
+}
+
+function attachResizeHandles(item, el){
+  removeResizeHandles(item);
+  const corners = [
+    { pos: 'nw', style: 'left:-6px;top:-6px;cursor:nwse-resize;' },
+    { pos: 'ne', style: 'right:-6px;top:-6px;cursor:nesw-resize;' },
+    { pos: 'sw', style: 'left:-6px;bottom:-6px;cursor:nesw-resize;' },
+    { pos: 'se', style: 'right:-6px;bottom:-6px;cursor:nwse-resize;' }
+  ];
+  corners.forEach(c => {
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle absolute w-3.5 h-3.5 bg-signal-500 border-2 border-white rounded-full shadow';
+    handle.style.cssText = c.style + 'z-index:50;';
+    handle.addEventListener('mousedown', (e) => startResizeDrag(e, el, item));
+    item.appendChild(handle);
+  });
+}
+
+function startResizeDrag(e, el, item){
+  e.preventDefault();
+  e.stopPropagation(); // jangan sampai memicu geser (drag-move) elemen sekaligus
+  const rect = item.getBoundingClientRect();
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+  const initialDist = Math.max(10, Math.hypot(e.clientX - centerX, e.clientY - centerY));
+  const initialSize = el.type === 'text' ? el.fontSize : el.size;
+  const minSize = el.type === 'text' ? 10 : 20;
+  const maxSize = el.type === 'text' ? 120 : 320;
+
+  function onMove(ev){
+    const dist = Math.hypot(ev.clientX - centerX, ev.clientY - centerY);
+    const scale = dist / initialDist;
+    let newSize = Math.round(initialSize * scale);
+    newSize = Math.max(minSize, Math.min(maxSize, newSize));
+    if (el.type === 'text') elCurrentSizeSet(el, 'fontSize', newSize); else elCurrentSizeSet(el, 'size', newSize);
+    applyElementStyle(item, el);
+    attachResizeHandles(item, el); // applyElementStyle mengosongkan isi elemen, jadi titik pojok perlu dipasang ulang
+    if (selectedElementId === el.id) {
+      const sizeInput = document.getElementById('prop-size-val');
+      const sizeLbl = document.getElementById('prop-size-lbl');
+      if (sizeInput) sizeInput.value = newSize;
+      if (sizeLbl) sizeLbl.innerText = newSize + 'px';
+    }
+  }
+  function onUp(){
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+function elCurrentSizeSet(el, key, val){ el[key] = val; }
 
 function makeDraggable(element, dataObj){
   let posX = 0, posY = 0, mouseX = 0, mouseY = 0;
@@ -2850,6 +2995,10 @@ function selectElement(id){
   textGroup.classList.toggle('hidden', !(elem.type === 'text' || elem.type === 'badge'));
   if (elem.type === 'text' || elem.type === 'badge') document.getElementById('prop-text-val').value = elem.text || '';
 
+  const fontGroup = document.getElementById('prop-font-group');
+  fontGroup.classList.toggle('hidden', elem.type !== 'text');
+  if (elem.type === 'text') document.getElementById('prop-font-val').value = elem.fontFamily || 'font-sans';
+
   iconGroup.classList.toggle('hidden', elem.type !== 'icon');
   if (elem.type === 'icon') {
     const grid = document.getElementById('icon-picker-grid');
@@ -2874,6 +3023,7 @@ function updateSelectedElement(prop, value){
   const elem = canvasElements.find(e => e.id === selectedElementId);
   if (!elem) return;
   if (prop === 'text') elem.text = value;
+  if (prop === 'fontFamily') elem.fontFamily = value;
   if (prop === 'icon') { elem.icon = value; selectElement(elem.id); }
   if (prop === 'color') { elem.color = value; document.getElementById('prop-color-hex').innerText = value; }
   if (prop === 'size') {
@@ -2910,6 +3060,18 @@ function deleteSelectedElement(){
   document.getElementById('inspector-controls').classList.add('hidden');
   renderCanvas();
 }
+
+/* Hapus elemen terpilih di Studio Canvas pakai tombol Backspace/Delete keyboard */
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+  if (!selectedElementId) return;
+  const activeTag = (document.activeElement && document.activeElement.tagName) || '';
+  if (activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT') return; // jangan ganggu saat mengetik
+  const studioTab = document.getElementById('tab-studio');
+  if (!studioTab || studioTab.classList.contains('hidden')) return; // hanya aktif saat di tab Studio Desain
+  e.preventDefault();
+  deleteSelectedElement();
+});
 
 function clearCanvas(){
   canvasElements = [];
