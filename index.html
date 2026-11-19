@@ -1351,6 +1351,25 @@
               <button onclick="loadTemplate('greeting')" class="w-full text-left px-3 py-2 bg-paper hover:bg-ink/10 rounded-lg text-xs font-medium text-ink/70 flex items-center justify-between"><span><i class="fa-solid fa-gift text-emerald-500 mr-2"></i>Kartu Ucapan</span><i class="fa-solid fa-chevron-right text-[10px] text-ink/30"></i></button>
             </div>
           </div>
+                  <div class="bg-white rounded-2xl border border-ink/10 p-4" id="studio-actions-card">
+            <p class="text-[11px] font-bold uppercase tracking-widest text-ink/50 mb-3">Aksi</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button id="studio-undo-btn" onclick="studioUndo()" disabled title="Urungkan (Ctrl+Z)" class="px-3 py-2 rounded-lg text-xs font-semibold bg-ink/5 hover:bg-ink/10 disabled:opacity-40 disabled:cursor-not-allowed"><i class="fa-solid fa-rotate-left mr-1"></i> Urungkan</button>
+              <button id="studio-redo-btn" onclick="studioRedo()" disabled title="Ulangi (Ctrl+Y)" class="px-3 py-2 rounded-lg text-xs font-semibold bg-ink/5 hover:bg-ink/10 disabled:opacity-40 disabled:cursor-not-allowed"><i class="fa-solid fa-rotate-right mr-1"></i> Ulangi</button>
+              <button onclick="studioDuplicate()" title="Duplikat elemen terpilih (Ctrl+D)" class="px-3 py-2 rounded-lg text-xs font-semibold bg-ink/5 hover:bg-ink/10"><i class="fa-solid fa-clone mr-1"></i> Duplikat</button>
+              <button onclick="studioPickImage()" title="Tambah gambar dari perangkat" class="px-3 py-2 rounded-lg text-xs font-semibold bg-ink/5 hover:bg-ink/10"><i class="fa-solid fa-image mr-1"></i> Gambar</button>
+              <button onclick="studioExportPng()" title="Unduh sebagai gambar PNG" class="col-span-2 px-3 py-2 rounded-lg text-xs font-bold bg-signal-500 text-white hover:opacity-90"><i class="fa-solid fa-download mr-1"></i> Unduh PNG</button>
+            </div>
+            <input type="file" id="studio-image-input" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" onchange="studioOnImageInput(this)">
+            <p class="text-[10px] text-ink/40 mt-3 leading-relaxed">Pintasan: Ctrl+Z urungkan &middot; Ctrl+Y ulangi &middot; Ctrl+D duplikat &middot; tombol panah menggeser 1 px (Shift = 10 px) &middot; Delete menghapus.</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-ink/10 p-4" id="studio-layer-card">
+            <details open>
+              <summary class="text-[11px] font-bold uppercase tracking-widest text-ink/50 cursor-pointer select-none">Layer (<span id="studio-layer-count">0</span>)</summary>
+              <p class="text-[10px] text-ink/40 mt-2">Paling atas = paling depan. Ketuk baris untuk memilih.</p>
+              <div id="studio-layers-list" class="mt-2 space-y-1 max-h-60 overflow-y-auto"></div>
+            </details>
+          </div>
         </div>
 
         <div class="lg:col-span-6 bg-ink/[0.03] rounded-2xl border border-ink/10 p-4 flex items-center justify-center min-h-[420px] overflow-auto relative">
@@ -1599,13 +1618,12 @@
 <script>
 /* ================= FIREBASE CONFIG — GANTI DENGAN MILIK ANDA ================= */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCTCtDYLEh4scnKTaD4DNkltwtKekC8HfY",
-  authDomain: "design-craft-studio.firebaseapp.com",
-  projectId: "design-craft-studio",
-  storageBucket: "design-craft-studio.firebasestorage.app",
-  messagingSenderId: "894884224993",
-  appId: "1:894884224993:web:53c5fd30e8f72ba4b6fca0",
-  measurementId: "G-X3Y0J4RFL2"
+  apiKey: "ISI_API_KEY_ANDA",
+  authDomain: "ISI_PROJECT_ID.firebaseapp.com",
+  projectId: "ISI_PROJECT_ID",
+  storageBucket: "ISI_PROJECT_ID.appspot.com",
+  messagingSenderId: "ISI_SENDER_ID",
+  appId: "ISI_APP_ID"
 };
 const ADMIN_CODE = "TOMPOKERSAN2026"; // Ganti dengan kode rahasia Anda sendiri
 const EMAIL_DOMAIN = "designcraft.local";
@@ -7338,6 +7356,457 @@ function saveWorkToGallery(title){
   alert('Karya "' + title + '" berhasil disimpan ke Galeri Karya! +30 XP');
 }
 
+
+/* =================== DESIGN STUDIO: Undo/Redo, Duplikat, Layer, Gambar, Ekspor PNG, Edit karya =================== */
+const studioHist = { undo: [], redo: [], cur: null, timer: null, restoring: false };
+let studioCurrentWorkId = null;
+
+function studioSnapshot(){
+  return JSON.stringify({ els: canvasElements, bg: studioCanvasBgColor });
+}
+function studioUpdateHistButtons(){
+  const u = document.getElementById('studio-undo-btn'), r = document.getElementById('studio-redo-btn');
+  if (u) u.disabled = studioHist.undo.length === 0;
+  if (r) r.disabled = studioHist.redo.length === 0;
+}
+function studioHistInit(){
+  clearTimeout(studioHist.timer);
+  studioHist.undo = []; studioHist.redo = [];
+  studioHist.cur = studioSnapshot();
+  studioUpdateHistButtons();
+}
+function studioMaybeCommit(){
+  if (studioHist.restoring) return;
+  const s = studioSnapshot();
+  if (studioHist.cur === null) { studioHist.cur = s; return; }
+  if (s === studioHist.cur) return;
+  studioHist.undo.push(studioHist.cur);
+  if (studioHist.undo.length > 40) studioHist.undo.shift();
+  studioHist.cur = s;
+  studioHist.redo = [];
+  studioUpdateHistButtons();
+}
+function studioFlush(){ clearTimeout(studioHist.timer); studioMaybeCommit(); }
+function studioCommitSoon(ms){ clearTimeout(studioHist.timer); studioHist.timer = setTimeout(studioMaybeCommit, ms || 500); }
+function studioRestore(str){
+  studioHist.restoring = true;
+  try {
+    const s = JSON.parse(str);
+    canvasElements = s.els;
+    studioCanvasBgColor = s.bg;
+    const container = document.getElementById('studio-canvas-container');
+    if (container) container.style.backgroundColor = s.bg;
+    const bgInput = document.getElementById('canvas-bg-color');
+    if (bgInput) bgInput.value = s.bg;
+    if (!canvasElements.some(e => e.id === selectedElementId)) {
+      selectedElementId = null;
+      const nsm = document.getElementById('no-selection-msg'), ic = document.getElementById('inspector-controls');
+      if (nsm) nsm.classList.remove('hidden');
+      if (ic) ic.classList.add('hidden');
+    }
+    renderCanvas();
+  } finally { studioHist.restoring = false; }
+}
+function studioUndo(){
+  studioFlush();
+  if (!studioHist.undo.length) return;
+  studioHist.redo.push(studioHist.cur);
+  studioHist.cur = studioHist.undo.pop();
+  studioRestore(studioHist.cur);
+  studioUpdateHistButtons();
+}
+function studioRedo(){
+  studioFlush();
+  if (!studioHist.redo.length) return;
+  studioHist.undo.push(studioHist.cur);
+  studioHist.cur = studioHist.redo.pop();
+  studioRestore(studioHist.cur);
+  studioUpdateHistButtons();
+}
+
+function studioToast(msg){
+  let t = document.getElementById('studio-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'studio-toast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:#15171C;color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.3);transition:opacity .25s';
+    document.body.appendChild(t);
+  }
+  t.innerText = msg; t.style.opacity = '1';
+  clearTimeout(t._h); t._h = setTimeout(() => { t.style.opacity = '0'; }, 2200);
+}
+
+/* ---- Duplikat ---- */
+function studioDuplicate(){
+  const src = canvasElements.find(e => e.id === selectedElementId);
+  if (!src) { studioToast('Pilih objek dulu, lalu duplikat.'); return; }
+  const copy = JSON.parse(JSON.stringify(src));
+  copy.id = 'el-' + (elementIdCounter++);
+  copy.x = (src.x || 0) + 16; copy.y = (src.y || 0) + 16;
+  copy.zIndex = canvasElements.reduce((m, e) => Math.max(m, e.zIndex || 0), 0) + 1;
+  canvasElements.push(copy);
+  renderCanvas();
+  selectElement(copy.id);
+  studioFlush();
+  studioToast('Objek diduplikat');
+}
+
+/* ---- Layer ---- */
+function studioNormalizeZ(){
+  const order = canvasElements.map((e, i) => [e, i]).sort((a, b) => ((a[0].zIndex || 0) - (b[0].zIndex || 0)) || (a[1] - b[1]));
+  order.forEach((p, i) => { p[0].zIndex = i + 1; });
+}
+function studioLayerName(e){
+  const n = { rect: 'Persegi', circle: 'Lingkaran', triangle: 'Segitiga', star: 'Bintang', line: 'Garis', badge: 'Lencana', icon: 'Ikon', image: 'Gambar' };
+  if (e.type === 'text') return 'Teks: ' + escapeHtml(String(e.text || '').slice(0, 14));
+  if (e.type === 'badge') return 'Lencana: ' + escapeHtml(String(e.text || '').slice(0, 10));
+  return n[e.type] || e.type;
+}
+function studioLayerIcon(e){
+  const n = { text: 'fa-font', rect: 'fa-square', circle: 'fa-circle', triangle: 'fa-play fa-rotate-270', star: 'fa-star', line: 'fa-minus', badge: 'fa-certificate', icon: 'fa-icons', image: 'fa-image' };
+  return n[e.type] || 'fa-shapes';
+}
+function studioRenderLayers(){
+  const list = document.getElementById('studio-layers-list');
+  if (!list) return;
+  const sorted = canvasElements.slice().sort((a, b) => (b.zIndex || 0) - (a.zIndex || 0));
+  if (!sorted.length) { list.innerHTML = '<p class="text-[11px] text-ink/30 text-center py-3">Belum ada layer</p>'; return; }
+  const btn = 'w-8 h-8 rounded-md hover:bg-white text-ink/50 disabled:opacity-25 flex items-center justify-center shrink-0';
+  list.innerHTML = sorted.map((e, i) =>
+    '<div class="flex items-center gap-1 px-1.5 py-1 rounded-lg ' + (e.id === selectedElementId ? 'bg-signal-50 border border-signal-300' : 'bg-paper border border-transparent') + '">' +
+      '<button onclick="studioLayerSelect(\'' + e.id + '\')" class="flex-1 min-w-0 text-left flex items-center gap-2 text-[11px] font-medium text-ink/70 py-1"><i class="fa-solid ' + studioLayerIcon(e) + ' w-4 text-center text-ink/40"></i><span class="truncate">' + studioLayerName(e) + '</span></button>' +
+      '<button onclick="studioLayerToggle(\'' + e.id + '\')" title="Tampilkan atau sembunyikan" class="' + btn + '"><i class="fa-solid ' + (e.hidden ? 'fa-eye-slash' : 'fa-eye') + '"></i></button>' +
+      '<button onclick="studioLayerMove(\'' + e.id + '\',\'up\')" title="Maju satu lapis" class="' + btn + '" ' + (i === 0 ? 'disabled' : '') + '><i class="fa-solid fa-chevron-up"></i></button>' +
+      '<button onclick="studioLayerMove(\'' + e.id + '\',\'down\')" title="Mundur satu lapis" class="' + btn + '" ' + (i === sorted.length - 1 ? 'disabled' : '') + '><i class="fa-solid fa-chevron-down"></i></button>' +
+    '</div>').join('');
+}
+function studioLayerSelect(id){ selectElement(id); }
+function studioLayerToggle(id){
+  const e = canvasElements.find(x => x.id === id);
+  if (!e) return;
+  e.hidden = !e.hidden;
+  renderCanvas();
+  studioFlush();
+}
+function studioLayerMove(id, dir){
+  studioNormalizeZ();
+  const e = canvasElements.find(x => x.id === id);
+  if (!e) return;
+  const target = e.zIndex + (dir === 'up' ? 1 : -1);
+  const other = canvasElements.find(x => x.zIndex === target);
+  if (!other) return;
+  other.zIndex = e.zIndex;
+  e.zIndex = target;
+  renderCanvas();
+  studioFlush();
+}
+
+/* ---- Gambar dari perangkat ---- */
+function studioPickImage(){ const i = document.getElementById('studio-image-input'); if (i) i.click(); }
+function studioInsertImage(dataUrl, w, h){
+  addElement('rect');
+  const e = canvasElements[canvasElements.length - 1];
+  e.type = 'image'; e.src = dataUrl; e.ar = (w && h) ? (w / h) : 1; e.size = 160; e.text = ''; e.icon = '';
+  renderCanvas();
+  selectElement(e.id);
+  studioFlush();
+  return e;
+}
+function studioOnImageInput(inp){
+  const file = inp && inp.files && inp.files[0];
+  if (!file) return;
+  if (!/^image\//.test(file.type)) { alert('Pilih file gambar (JPG, PNG, atau WEBP).'); inp.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const isPng = file.type === 'image/png';
+      let max = 520, url = '';
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const sc = Math.min(1, max / Math.max(img.width, img.height));
+        const cv = document.createElement('canvas');
+        cv.width = Math.max(1, Math.round(img.width * sc)); cv.height = Math.max(1, Math.round(img.height * sc));
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        url = isPng ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', 0.8);
+        if (url.length < 350000) break;
+        max = Math.round(max * 0.7);
+      }
+      studioInsertImage(url, img.width, img.height);
+      studioToast('Gambar ditambahkan');
+      inp.value = '';
+    };
+    img.onerror = () => { alert('Gambar tidak bisa dibaca. Coba file lain.'); inp.value = ''; };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/* ---- Ekspor PNG: digambar ulang dari data elemen (tidak bergantung tampilan layar) ---- */
+function studioFontFamily(cls){
+  const m = { 'font-sans': "'Work Sans', sans-serif", 'font-heading': "'Space Grotesk', sans-serif", 'font-poppins': "'Poppins', sans-serif", 'font-anton': "'Anton', sans-serif", 'font-bebas': "'Bebas Neue', sans-serif", 'font-pacifico': "'Pacifico', cursive" };
+  return m[cls] || m['font-sans'];
+}
+function studioLoadImage(src){
+  return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('gambar gagal dimuat')); i.src = src; });
+}
+function studioPolygonPoints(clip, w, h){
+  const m = /polygon\(([^)]*)\)/.exec(clip || '');
+  if (!m) return null;
+  const pts = m[1].split(',').map(p => p.trim().split(/\s+/)).map(p => [parseFloat(p[0]) / 100 * w, parseFloat(p[1]) / 100 * h]);
+  return pts.every(p => !isNaN(p[0]) && !isNaN(p[1])) && pts.length >= 3 ? pts : null;
+}
+const STUDIO_FALLBACK_CLIP = {
+  triangle: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+  star: 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+  badge: 'polygon(50% 0%, 61% 8%, 75% 6%, 82% 18%, 94% 25%, 92% 39%, 100% 50%, 92% 61%, 94% 75%, 82% 82%, 75% 94%, 61% 92%, 50% 100%, 39% 92%, 25% 94%, 18% 82%, 6% 75%, 8% 61%, 0% 50%, 8% 39%, 6% 25%, 18% 18%, 25% 6%, 39% 8%)'
+};
+function studioRoundRectPath(ctx, x, y, w, h, r){
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+function studioIconGlyph(cls){
+  try {
+    const i = document.createElement('i');
+    i.className = 'fa-solid ' + cls;
+    i.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden';
+    document.body.appendChild(i);
+    let content = getComputedStyle(i, '::before').content || '';
+    const fam = getComputedStyle(i).fontFamily || '"Font Awesome 6 Free"';
+    document.body.removeChild(i);
+    content = content.replace(/^["']|["']$/g, '');
+    return content && content !== 'none' && content !== 'normal' ? { ch: content, fam: fam } : null;
+  } catch (e) { return null; }
+}
+async function studioRenderCanvas(elements, W, H, bg, scale){
+  scale = scale || 2;
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(W * scale); cv.height = Math.round(H * scale);
+  const ctx = cv.getContext('2d');
+  if (!ctx) throw new Error('Browser ini belum mendukung kanvas gambar');
+  ctx.scale(scale, scale);
+  ctx.fillStyle = bg || '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+  const list = (elements || []).filter(e => !e.hidden).slice().sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+  try {
+    if (document.fonts && document.fonts.load) {
+      const fams = {};
+      list.filter(e => e.type === 'text').forEach(e => { fams[studioFontFamily(e.fontFamily)] = 1; });
+      await Promise.all(Object.keys(fams).map(f => document.fonts.load('700 20px ' + f)).concat(list.some(e => e.type === 'icon') ? [document.fonts.load('900 20px "Font Awesome 6 Free"')] : []));
+    }
+  } catch (e) { /* lanjut dengan font bawaan */ }
+  const imgs = {};
+  for (const e of list) { if (e.type === 'image' && e.src && !imgs[e.id]) imgs[e.id] = await studioLoadImage(e.src); }
+  for (const el of list) {
+    const tmp = document.createElement('div');
+    applyElementStyle(tmp, el);
+    const s = tmp.style;
+    const left = parseFloat(s.left) || 0, top = parseFloat(s.top) || 0;
+    let w = parseFloat(s.width), h = parseFloat(s.height);
+    const rot = /rotate\((-?[\d.]+)deg\)/.exec(s.transform || '');
+    const alpha = s.opacity === '' || s.opacity === undefined ? 1 : parseFloat(s.opacity);
+    ctx.save();
+    if (el.type === 'text') {
+      const fs = parseFloat(s.fontSize) || el.fontSize || 24;
+      ctx.font = '700 ' + fs + 'px ' + studioFontFamily(el.fontFamily);
+      w = ctx.measureText(String(el.text || '')).width; h = fs * 1.5;
+    } else {
+      if (isNaN(w)) w = el.size; if (isNaN(h)) h = el.size;
+    }
+    ctx.translate(left + w / 2, top + h / 2);
+    if (rot) ctx.rotate(parseFloat(rot[1]) * Math.PI / 180);
+    ctx.globalAlpha = isNaN(alpha) ? 1 : alpha;
+    if (el.type === 'text') {
+      ctx.fillStyle = el.color || '#15171C';
+      ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      ctx.fillText(String(el.text || ''), -w / 2, 0);
+    } else {
+      const pts = studioPolygonPoints(s.clipPath || s.webkitClipPath || STUDIO_FALLBACK_CLIP[el.type], w, h);
+      if (pts) { ctx.beginPath(); pts.forEach((p, i) => { if (i === 0) ctx.moveTo(-w / 2 + p[0], -h / 2 + p[1]); else ctx.lineTo(-w / 2 + p[0], -h / 2 + p[1]); }); ctx.closePath(); }
+      else {
+        const br = s.borderRadius || (el.type === 'circle' ? '50%' : (el.type === 'rect' ? '12px' : (el.type === 'icon' ? '16px' : (el.type === 'image' ? '6px' : '0'))));
+        const r = /%$/.test(br) ? Math.min(w, h) * parseFloat(br) / 100 : (parseFloat(br) || 0);
+        studioRoundRectPath(ctx, -w / 2, -h / 2, w, h, r);
+      }
+      if (el.type === 'image') {
+        ctx.clip();
+        ctx.drawImage(imgs[el.id], -w / 2, -h / 2, w, h);
+      } else {
+        ctx.fillStyle = el.color || '#FF4B1F';
+        ctx.fill();
+        if (el.type === 'icon') {
+          const g = studioIconGlyph(el.icon);
+          if (g) { ctx.fillStyle = '#ffffff'; ctx.font = '900 ' + Math.round(el.size * 0.45) + 'px ' + g.fam; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(g.ch, 0, 0); }
+        } else if (el.type === 'badge' && el.text) {
+          ctx.fillStyle = '#ffffff'; ctx.font = '700 10px ' + studioFontFamily('font-sans'); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(String(el.text).slice(0, 14), 0, 0);
+        }
+      }
+    }
+    ctx.restore();
+  }
+  return cv;
+}
+function studioDownloadPng(cv, name){
+  return new Promise((resolve, reject) => {
+    if (!cv.toBlob) { reject(new Error('toBlob tidak tersedia')); return; }
+    cv.toBlob(blob => {
+      if (!blob) { reject(new Error('gagal membuat berkas')); return; }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = String(name || 'karya-designcraft').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1500);
+      resolve();
+    }, 'image/png');
+  });
+}
+async function studioExportPng(){
+  if (!canvasElements.length) { studioToast('Kanvas masih kosong.'); return; }
+  const c = document.getElementById('studio-canvas-container');
+  const W = (c && (parseInt(c.style.width, 10) || c.offsetWidth)) || 380, H = (c && (parseInt(c.style.height, 10) || c.offsetHeight)) || 380;
+  try {
+    const cv = await studioRenderCanvas(canvasElements, W, H, studioCanvasBgColor, 2);
+    await studioDownloadPng(cv, 'karya-designcraft');
+    studioToast('PNG berhasil diunduh');
+  } catch (e) { alert('Gagal membuat PNG: ' + e.message); }
+}
+async function studioExportWork(id){
+  const w = (currentUserData.gallery || []).find(x => x.id === id);
+  if (!w) return;
+  try {
+    const cv = await studioRenderCanvas(w.elements, w.canvasWidth || 380, w.canvasHeight || 380, w.bgColor || '#ffffff', 2);
+    await studioDownloadPng(cv, w.title);
+    studioToast('PNG berhasil diunduh');
+  } catch (e) { alert('Gagal membuat PNG: ' + e.message); }
+}
+
+/* ---- Edit karya dari Karya Saya + simpan (perbarui atau baru) ---- */
+function studioEditWork(id){
+  const w = (currentUserData.gallery || []).find(x => x.id === id);
+  if (!w) return;
+  canvasElements = JSON.parse(JSON.stringify(w.elements || []));
+  studioCanvasBgColor = w.bgColor || '#ffffff';
+  const nums = canvasElements.map(e => parseInt(String(e.id).replace(/\D+/g, ''), 10)).filter(n => !isNaN(n));
+  elementIdCounter = Math.max(elementIdCounter, (nums.length ? Math.max.apply(null, nums) : 0) + 1);
+  const c = document.getElementById('studio-canvas-container');
+  if (c) { c.style.width = (w.canvasWidth || 380) + 'px'; c.style.height = (w.canvasHeight || 380) + 'px'; c.style.backgroundColor = studioCanvasBgColor; }
+  const bgInput = document.getElementById('canvas-bg-color');
+  if (bgInput) bgInput.value = studioCanvasBgColor;
+  selectedElementId = null;
+  const nsm = document.getElementById('no-selection-msg'), ic = document.getElementById('inspector-controls');
+  if (nsm) nsm.classList.remove('hidden');
+  if (ic) ic.classList.add('hidden');
+  renderCanvas();
+  studioCurrentWorkId = id;
+  studioHistInit();
+  switchTab('studio');
+  studioToast('Membuka "' + w.title + '" untuk diedit');
+}
+function studioWorkTooBig(extra){
+  return (JSON.stringify(currentUserData.gallery || []).length + extra) > 850000;
+}
+
+/* ---- Pembungkus fungsi lama (tampilan & perilaku tetap, ditambah fitur baru) ---- */
+const __studioApply = applyElementStyle;
+applyElementStyle = function(item, el){
+  __studioApply(item, el);
+  if (el.type === 'image') {
+    item.style.width = el.size + 'px';
+    item.style.height = Math.round(el.size / (el.ar || 1)) + 'px';
+    item.innerHTML = '<img src="' + el.src + '" alt="" draggable="false" style="width:100%;height:100%;object-fit:fill;pointer-events:none;border-radius:6px;display:block">';
+  }
+  if (el.hidden) item.style.display = 'none';
+};
+const __studioRenderCanvas = renderCanvas;
+renderCanvas = function(){ const r = __studioRenderCanvas.apply(this, arguments); studioRenderLayers(); return r; };
+const __studioSelect = selectElement;
+selectElement = function(id){
+  const r = __studioSelect.apply(this, arguments);
+  const el = canvasElements.find(e => e.id === id);
+  const colorInput = document.getElementById('prop-color-val');
+  if (colorInput && colorInput.parentElement && colorInput.parentElement.parentElement) colorInput.parentElement.parentElement.style.display = (el && el.type === 'image') ? 'none' : '';
+  studioRenderLayers();
+  return r;
+};
+const __studioUpdateSel = updateSelectedElement;
+updateSelectedElement = function(){ const r = __studioUpdateSel.apply(this, arguments); studioRenderLayers(); return r; };
+const __studioLoadTpl = loadTemplate;
+loadTemplate = function(){ studioCurrentWorkId = null; return __studioLoadTpl.apply(this, arguments); };
+const __studioClear = clearCanvas;
+clearCanvas = function(){ const n = canvasElements.length; const r = __studioClear.apply(this, arguments); if (canvasElements.length === 0 && n > 0) studioCurrentWorkId = null; return r; };
+const __studioPromptSave = promptSaveWork;
+promptSaveWork = function(){
+  if (canvasElements.length === 0) { alert('Tambahkan minimal satu elemen ke kanvas sebelum menyimpan.'); return; }
+  const extra = JSON.stringify(canvasElements).length + 500;
+  const existing = studioCurrentWorkId ? (currentUserData.gallery || []).find(w => w.id === studioCurrentWorkId) : null;
+  if (studioWorkTooBig(existing ? extra - JSON.stringify(existing.elements).length : extra)) {
+    alert('Ruang penyimpanan akunmu hampir penuh. Hapus beberapa karya lama atau kurangi jumlah gambar, lalu simpan lagi.');
+    return;
+  }
+  if (existing && confirm('Perbarui karya "' + existing.title + '" yang sedang kamu edit?\n\nOK = perbarui karya ini\nBatal = simpan sebagai karya baru')) {
+    const c = document.getElementById('studio-canvas-container');
+    existing.elements = JSON.parse(JSON.stringify(canvasElements));
+    existing.canvasWidth = (c && (parseInt(c.style.width, 10) || c.offsetWidth)) || existing.canvasWidth;
+    existing.canvasHeight = (c && (parseInt(c.style.height, 10) || c.offsetHeight)) || existing.canvasHeight;
+    existing.bgColor = studioCanvasBgColor;
+    existing.date = new Date().toLocaleDateString('id-ID');
+    renderGallery();
+    saveUserData();
+    alert('Karya "' + existing.title + '" berhasil diperbarui.');
+    return;
+  }
+  const before = (currentUserData.gallery || []).length;
+  __studioPromptSave.apply(this, arguments);
+  const g = currentUserData.gallery || [];
+  if (g.length > before) studioCurrentWorkId = g[g.length - 1].id;
+};
+const __studioRenderGallery = renderGallery;
+renderGallery = function(){
+  const r = __studioRenderGallery.apply(this, arguments);
+  const grid = document.getElementById('saved-gallery-grid');
+  if (grid) Array.from(grid.children).forEach(card => {
+    const prev = card.querySelector('[id^="prev-"]');
+    if (!prev || card.querySelector('[data-studio-actions]')) return;
+    const id = prev.id.replace(/^prev-/, '');
+    const row = document.createElement('div');
+    row.setAttribute('data-studio-actions', '1');
+    row.className = 'flex gap-1.5 px-1 pt-1';
+    row.innerHTML = '<button onclick="studioEditWork(\'' + id + '\')" class="flex-1 py-2 rounded-lg bg-white border border-ink/10 hover:bg-signal-50 text-[11px] font-bold text-ink/70"><i class="fa-solid fa-pen mr-1"></i> Edit</button><button onclick="studioExportWork(\'' + id + '\')" class="flex-1 py-2 rounded-lg bg-white border border-ink/10 hover:bg-signal-50 text-[11px] font-bold text-ink/70"><i class="fa-solid fa-download mr-1"></i> PNG</button>';
+    card.appendChild(row);
+  });
+  return r;
+};
+const __studioInitApp = initStudentApp;
+initStudentApp = function(){ const r = __studioInitApp.apply(this, arguments); studioCurrentWorkId = null; studioHistInit(); studioRenderLayers(); return r; };
+
+/* ---- Pemicu otomatis pencatatan riwayat + pintasan keyboard (hanya saat tab Studio terbuka) ---- */
+function studioTabOpen(){ const t = document.getElementById('tab-studio'); return !!t && !t.classList.contains('hidden'); }
+['mouseup', 'touchend', 'change', 'click'].forEach(ev => document.addEventListener(ev, () => { if (studioTabOpen()) setTimeout(studioMaybeCommit, 0); }));
+document.addEventListener('input', () => { if (studioTabOpen()) studioCommitSoon(500); });
+document.addEventListener('keydown', (e) => {
+  if (!studioTabOpen()) return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+  const k = (e.key || '').toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && k === 'z') { e.preventDefault(); studioUndo(); }
+  else if ((e.ctrlKey || e.metaKey) && (k === 'y' || (e.shiftKey && k === 'z'))) { e.preventDefault(); studioRedo(); }
+  else if ((e.ctrlKey || e.metaKey) && k === 'd') { e.preventDefault(); studioDuplicate(); }
+  else if (selectedElementId && ['arrowleft', 'arrowright', 'arrowup', 'arrowdown'].includes(k)) {
+    const el = canvasElements.find(x => x.id === selectedElementId);
+    if (!el) return;
+    e.preventDefault();
+    const d = e.shiftKey ? 10 : 1;
+    if (k === 'arrowleft') el.x -= d; else if (k === 'arrowright') el.x += d; else if (k === 'arrowup') el.y -= d; else el.y += d;
+    renderCanvas();
+    studioCommitSoon(400);
+  }
+});
 let selectedGalleryIds = new Set();
 
 function renderGallery(){
